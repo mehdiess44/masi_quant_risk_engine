@@ -1,0 +1,14 @@
+{
+    "model_name": "Monte Carlo MBG",
+    "version": "3.0",
+    "calibration": {
+        "mu": 0.00032432418358120126,
+        "sigma": 0.007887243849819642,
+        "S0": 12.38882
+    },
+    "simulation_settings": {
+        "horizon_days": 1,
+        "n_simulations": 100000,
+        "alpha_target": 0.05
+    }
+}
