@@ -46,6 +46,11 @@ export default function MLPage() {
     }));
   }, [data.preds]);
 
+  const lastPred = useMemo(() => {
+    if (!data.preds?.predictions?.length) return null;
+    return data.preds.predictions[data.preds.predictions.length - 1];
+  }, [data.preds]);
+
   const featsData = useMemo(() => {
     if (!data.feats?.features) return [];
     let feats = [...data.feats.features].sort((a, b) => b.importance - a.importance).slice(0, 8);
@@ -91,7 +96,7 @@ export default function MLPage() {
         </h1>
       </div>
 
-      <div className="flex gap-4 items-center">
+      <div className="flex gap-4 items-center flex-wrap">
         <GlassPanel className="flex items-center gap-6 p-4">
           <NeonGauge value={gaugeScore} size="sm" label="Qualité" />
           <div className="flex flex-col gap-2">
@@ -103,6 +108,27 @@ export default function MLPage() {
             </StatusChip>
           </div>
         </GlassPanel>
+        
+        {lastPred && (
+          <>
+            <GlassPanel hover glow className="p-4 w-48 flex-1 min-w-[200px]">
+              <div className="text-xs uppercase text-[var(--text-secondary)] mb-2">
+                <TermTooltip term="VaR (Dernier Jour)">VaR (Dernier Jour)</TermTooltip>
+              </div>
+              <div className="text-2xl font-['JetBrains_Mono'] text-[var(--neon-loss)]">
+                {(lastPred.var_predicted * 100).toFixed(2)}%
+              </div>
+            </GlassPanel>
+            <GlassPanel hover glow className="p-4 w-48 flex-1 min-w-[200px]">
+              <div className="text-xs uppercase text-[var(--text-secondary)] mb-2">
+                <TermTooltip term="ES (Estimé)">ES (Estimé)</TermTooltip>
+              </div>
+              <div className="text-2xl font-['JetBrains_Mono'] text-[var(--neon-warning)]">
+                {(lastPred.var_predicted * 1.25 * 100).toFixed(2)}%
+              </div>
+            </GlassPanel>
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-6">

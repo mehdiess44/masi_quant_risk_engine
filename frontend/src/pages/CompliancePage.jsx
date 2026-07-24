@@ -112,8 +112,8 @@ export default function CompliancePage() {
           {kupData.hit_sequence.map((hit, i) => (
             <div 
               key={i} 
-              className={`w-3 h-3 rounded-sm ${hit ? 'bg-[var(--neon-loss)]' : 'bg-[var(--neon-profit)] opacity-50'}`}
-              title={hit ? 'Violation' : 'Pass'}
+              className={`w-3 h-3 rounded-sm ${hit.is_violation ? 'bg-red-500' : 'bg-[#1A2235]'}`}
+              title={hit.is_violation ? 'Violation' : 'Pass'}
             />
           ))}
         </div>

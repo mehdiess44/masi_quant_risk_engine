@@ -41,6 +41,7 @@ class MonteCarloEngine:
         dt = horizon_days / 252.0
         
         # Mouvement Brownien Géométrique vectorisé
+        np.random.seed(42)
         Z = np.random.standard_normal(n_simulations)
         drift = (mu - 0.5 * sigma**2) * dt
         diffusion = sigma * np.sqrt(dt) * Z

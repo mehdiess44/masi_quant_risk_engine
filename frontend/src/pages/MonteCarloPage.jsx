@@ -55,8 +55,8 @@ export default function MonteCarloPage() {
   const histData = useMemo(() => {
     if (!data?.distribution_bins) return [];
     return data.distribution_bins.map(b => ({
-      bin: b.bin,
-      count: b.frequency
+      bin: (b.bin_start + b.bin_end) / 2,
+      count: b.count
     }));
   }, [data?.distribution_bins]);
 
