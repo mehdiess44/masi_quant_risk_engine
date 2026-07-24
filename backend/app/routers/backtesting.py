@@ -16,11 +16,14 @@ def get_mc_var_predictions(alpha: float):
     actual_returns = df_test['log_return'].tolist()
     
     var_preds = []
+    es_preds = []
     
     FENETRE_GLISSANTE = 252
     N_TRAJECTOIRES_BT = 10000
     
     # Fixer la seed pour assurer la reproductibilité stricte du backtest par rapport au notebook
+    # Wait, the seed here makes the Monte Carlo backtest strictly deterministic.
+    # We will keep it here since it's for backtesting and reproducibility is good.
     np.random.seed(42)
     
     for target_date in dates:
@@ -29,11 +32,12 @@ def get_mc_var_predictions(alpha: float):
         
         if len(fenetre_data) < FENETRE_GLISSANTE:
             var_preds.append(0.0)
+            es_preds.append(0.0)
             continue
             
         rendements_fenetre = fenetre_data['log_return'].dropna()
         mu_dyn = np.mean(rendements_fenetre)
-        sigma_dyn = np.std(rendements_fenetre)
+        sigma_dyn = np.std(rendements_fenetre, ddof=1)
         
         # Moteur Monte Carlo pour T=1
         Z = np.random.standard_normal(N_TRAJECTOIRES_BT)
@@ -44,7 +48,11 @@ def get_mc_var_predictions(alpha: float):
         var_pred = np.percentile(rendements_simules_T1, alpha * 100)
         var_preds.append(float(var_pred))
         
-    return actual_returns, var_preds, dates
+        # L'ES est la moyenne conditionnelle
+        es_pred = np.mean(rendements_simules_T1[rendements_simules_T1 <= var_pred])
+        es_preds.append(float(es_pred))
+        
+    return actual_returns, var_preds, es_preds, dates
 
 @router.get("/kupiec", response_model=BacktestingResponse)
 def get_kupiec_test(request: Request, model: str = Query("ml", pattern="^(mc|ml)$"), alpha: float = 0.05):
@@ -57,7 +65,7 @@ def get_kupiec_test(request: Request, model: str = Query("ml", pattern="^(mc|ml)
         vars_pred = [p['var_predicted'] for p in preds]
         dates = [p['date'] for p in preds]
     else:
-        returns, vars_pred, dates = get_mc_var_predictions(alpha)
+        returns, vars_pred, es_preds, dates = get_mc_var_predictions(alpha)
         
     res = bt_engine.kupiec_test(returns, vars_pred, alpha)
     
@@ -67,7 +75,7 @@ def get_kupiec_test(request: Request, model: str = Query("ml", pattern="^(mc|ml)
             "date": dates[i],
             "actual_return": float(returns[i]),
             "var_threshold": float(vars_pred[i]),
-            "es_threshold": float(vars_pred[i]) * 1.25, # approximation ES
+            "es_threshold": float(es_preds[i]) if model == "mc" else float(vars_pred[i]) * 1.25,
             "is_violation": bool(res['hit_sequence_bools'][i])
         })
         
@@ -90,7 +98,7 @@ def get_comparison(request: Request, alpha: float = 0.05):
     ml_res = bt_engine.kupiec_test(ml_returns, ml_vars, alpha)
     
     # MC
-    mc_returns, mc_vars, _ = get_mc_var_predictions(alpha)
+    mc_returns, mc_vars, mc_es, _ = get_mc_var_predictions(alpha)
     mc_res = bt_engine.kupiec_test(mc_returns, mc_vars, alpha)
     
     # Best model logic: closer to target p_hat or better p-value

@@ -4,6 +4,7 @@ from app.services.regulatory_engine import RegulatoryEngine
 from app.services.backtesting_engine import BacktestingEngine
 from app.data_pipeline import load_test_data
 from scipy.stats import norm
+from app.routers.backtesting import get_mc_var_predictions
 
 router = APIRouter(prefix="/api/regulatory", tags=["Regulatory (Basel III)"])
 reg_engine = RegulatoryEngine()
@@ -21,14 +22,9 @@ def get_traffic_light(request: Request, model: str = Query("ml", pattern="^(mc|m
         returns = [p['actual_return'] for p in preds]
         vars_pred = [p['var_predicted'] for p in preds]
     else:
-        df = load_test_data().tail(window_size)
-        returns = df['log_return'].tolist()
-        z_score = norm.ppf(alpha)
-        if 'EWMA_Vol_20d' in df.columns:
-            vars_pred = (df['EWMA_Vol_20d'] * z_score).fillna(0).tolist()
-        else:
-            vars_pred = (df['volatility_20d'] * z_score).fillna(0).tolist()
-            
+        returns_all, vars_pred_all, es_preds_all, dates_all = get_mc_var_predictions(alpha)
+        returns = returns_all[-window_size:]
+        vars_pred = vars_pred_all[-window_size:]
     res = bt_engine.kupiec_test(returns, vars_pred, alpha)
     exceptions = res['x']
     

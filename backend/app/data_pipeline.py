@@ -30,9 +30,6 @@ def clean_french_format(df: pd.DataFrame) -> pd.DataFrame:
             if has_percent:
                 df[col] = df[col] / 100.0
                 
-    if 'Close' in df.columns and df['Close'].max() < 100:
-        df['Close'] = df['Close'] * 1000
-                
     return df
 
 def compute_ml_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -61,7 +58,7 @@ def compute_ml_features(df: pd.DataFrame) -> pd.DataFrame:
     df['return_lag_5'] = df['log_return'].shift(5)
     
     # 5. Dist_SMA_20 = (Close - SMA_20) / SMA_20
-    sma_20 = df['Close'].rolling(window=20, min_periods=1).mean()
+    sma_20 = df['Close'].rolling(window=20).mean()
     df['Dist_SMA_20'] = (df['Close'] - sma_20) / sma_20
     
     # 6. Amplitude_Intraday = (Plus_Haut - Plus_Bas) / Ouv.
@@ -109,7 +106,7 @@ def load_test_data() -> pd.DataFrame:
 
 @functools.lru_cache(maxsize=1)
 def load_eval_test_data() -> pd.DataFrame:
-    return load_test_data()
+    return load_full_data()
 
 @functools.lru_cache(maxsize=1)
 def load_pure_test_data() -> pd.DataFrame:
