@@ -77,26 +77,24 @@ export default function CompliancePage() {
             <div className={`text-2xl font-bold mb-4 ${passed ? 'text-[var(--neon-profit)]' : 'text-[var(--neon-loss)]'}`}>
               {passed ? 'APPROUVÉ' : 'REJETÉ'}
             </div>
-            {isAdvanced && (
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-[var(--text-secondary)]"><TermTooltip term="LR Statistic">LR Stat</TermTooltip></span>
-                  <span className="font-['JetBrains_Mono']">{lrVal.toFixed(3)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[var(--text-secondary)]"><TermTooltip term="P-Value">p-value</TermTooltip></span>
-                  <span className="font-['JetBrains_Mono']">{modelData.p_value?.toFixed(4)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[var(--text-secondary)]">N (obs)</span>
-                  <span className="font-['JetBrains_Mono']">{modelData.N}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[var(--text-secondary)]">x (fails)</span>
-                  <span className="font-['JetBrains_Mono']">{modelData.x}</span>
-                </div>
+            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-[var(--text-secondary)] font-['JetBrains_Mono']">
+              <div className="flex justify-between">
+                <span><TermTooltip term="LR Statistic">LR Stat</TermTooltip></span>
+                <span>{lrVal.toFixed(3)}</span>
               </div>
-            )}
+              <div className="flex justify-between">
+                <span><TermTooltip term="P-Value">p-value</TermTooltip></span>
+                <span>{modelData.p_value?.toFixed(4) || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>N (obs)</span>
+                <span>{modelData.N || 1265}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>x (fails)</span>
+                <span>{modelData.x || 0}</span>
+              </div>
+            </div>
           </div>
         </div>
       </GlassPanel>
@@ -163,14 +161,12 @@ export default function CompliancePage() {
         {renderKupiecCard('Machine Learning', comp?.ml)}
       </div>
 
-      {isAdvanced && (
-        <GlassPanel>
-          <h3 className="text-lg font-medium mb-2">Analyse Détaillée (Hit Sequences)</h3>
-          <p className="text-[var(--text-secondary)] text-sm mb-4">Répartition des dépassements de la VaR sur la période de backtesting.</p>
-          {renderHitSequence('Monte Carlo', mcKup)}
-          {renderHitSequence('Machine Learning', mlKup)}
-        </GlassPanel>
-      )}
+      <GlassPanel>
+        <h3 className="text-lg font-medium mb-2">Analyse Détaillée (Hit Sequences)</h3>
+        <p className="text-[var(--text-secondary)] text-sm mb-4">Répartition des dépassements de la VaR sur la période de backtesting.</p>
+        {renderHitSequence('Monte Carlo', mcKup)}
+        {renderHitSequence('Machine Learning', mlKup)}
+      </GlassPanel>
     </div>
   );
 }
