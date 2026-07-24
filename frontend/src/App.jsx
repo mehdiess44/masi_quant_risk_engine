@@ -10,7 +10,7 @@ export default function App() {
   return (
     <ModeProvider>
       <BrowserRouter>
-        <div className="flex h-screen overflow-hidden" style={{background: 'var(--surface-void)', color: 'var(--text-primary)'}}>
+        <div className="flex h-screen overflow-hidden" style={{ background: 'var(--surface-void)', color: 'var(--text-primary)' }}>
           <Sidebar />
           <main className="flex-1 overflow-y-auto p-6 ml-[220px]">
             <Routes>
