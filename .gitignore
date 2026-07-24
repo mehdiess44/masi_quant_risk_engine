@@ -60,3 +60,4 @@ Thumbs.db
 
 # Masquer la configuration gStack/Antigravity
 .antigravity
+.gstack/

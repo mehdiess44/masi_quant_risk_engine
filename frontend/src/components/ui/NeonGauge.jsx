@@ -31,9 +31,16 @@ export default function NeonGauge({ value = 0, size = 'xl', label, icon, classNa
   };
   const config = sizes[size] || sizes.xl;
   
-  let color = 'var(--neon-profit)';
-  if (value <= 3) color = 'var(--neon-loss)';
-  else if (value <= 6) color = 'var(--neon-warning)';
+  let startColor = 'var(--neon-profit)';
+  let endColor = '#00B371';
+  if (value <= 3) {
+    startColor = 'var(--neon-loss)';
+    endColor = '#CC0033';
+  } else if (value <= 7) {
+    // Robotter AI gradient for neutral/warning
+    startColor = 'var(--neon-cyan)';
+    endColor = '#B000FF'; // Cyberpunk Magenta
+  }
 
   const radius = 85;
   const circumference = 2 * Math.PI * radius;
@@ -50,13 +57,18 @@ export default function NeonGauge({ value = 0, size = 'xl', label, icon, classNa
     <div className={className} style={{ width: config.width, height: config.width, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
       <svg width={config.width} height={config.width} viewBox="0 0 200 200" style={{ position: 'absolute', transform: 'rotate(150deg)' }}>
         <defs>
-          <filter id={`glow-${size}`}>
-            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+          <filter id={`glow-${size}`} x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
             <feMerge>
+              <feMergeNode in="coloredBlur"/>
               <feMergeNode in="coloredBlur"/>
               <feMergeNode in="SourceGraphic"/>
             </feMerge>
           </filter>
+          <linearGradient id={`gradient-${size}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={startColor} />
+            <stop offset="100%" stopColor={endColor} />
+          </linearGradient>
         </defs>
         
         {/* Track */}
@@ -74,7 +86,7 @@ export default function NeonGauge({ value = 0, size = 'xl', label, icon, classNa
         <circle 
           cx="100" cy="100" r={radius} 
           fill="none" 
-          stroke={color} 
+          stroke={`url(#gradient-${size})`}
           strokeWidth={config.stroke}
           strokeDasharray={strokeDasharray}
           strokeDashoffset={strokeDashoffset}
@@ -85,7 +97,7 @@ export default function NeonGauge({ value = 0, size = 'xl', label, icon, classNa
       </svg>
       
       <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '10%' }}>
-        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 'bold', fontSize: config.fontSize, color: 'var(--text-primary)', lineHeight: 1 }}>
+        <span className="font-mono-data" style={{ fontWeight: 'bold', fontSize: config.fontSize, color: 'var(--text-primary)', lineHeight: 1 }}>
           {displayValue.toFixed(1)}
         </span>
         {icon && <span style={{ marginTop: '4px', fontSize: size === 'xl' ? '24px' : '16px' }}>{icon}</span>}
