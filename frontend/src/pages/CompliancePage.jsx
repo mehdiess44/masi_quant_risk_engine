@@ -10,7 +10,7 @@ import { fetchBacktestingComparison, fetchTrafficLight, fetchKupiecTest } from '
 
 export default function CompliancePage() {
   const { isAdvanced } = useMode();
-  const [alpha, setAlpha] = useState(0.05);
+  const alpha = 0.05;
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
 
@@ -34,7 +34,7 @@ export default function CompliancePage() {
     loadData();
   }, [alpha]);
 
-  if (loading) {
+  if (loading || !data) {
     return (
       <div className="space-y-8 pb-8 animate-pulse">
         <div className="flex items-center justify-between">
@@ -52,7 +52,7 @@ export default function CompliancePage() {
     );
   }
 
-  const { comp, mcTraf, mlTraf, mcKup, mlKup } = data;
+  const { comp, mcTraf, mlTraf, mcKup, mlKup } = data || {};
   const bothPass = !comp?.mc?.reject_H0 && !comp?.ml?.reject_H0;
 
   const renderKupiecCard = (modelName, modelData) => {
@@ -75,7 +75,7 @@ export default function CompliancePage() {
           <NeonGauge value={score} size="md" label="LR Stat Score" />
           <div className="flex-1">
             <div className={`text-2xl font-bold mb-4 ${passed ? 'text-[var(--neon-profit)]' : 'text-[var(--neon-loss)]'}`}>
-              {passed ? '✅ APPROUVÉ' : '❌ REJETÉ'}
+              {passed ? 'APPROUVÉ' : 'REJETÉ'}
             </div>
             {isAdvanced && (
               <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
@@ -129,19 +129,8 @@ export default function CompliancePage() {
       
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold font-['Outfit']">
-          🏛️ <TermTooltip term="Bâle III">Conformité Bâle III</TermTooltip>
+          <TermTooltip term="Bâle III">Conformité Bâle III</TermTooltip>
         </h1>
-        {isAdvanced && (
-          <select 
-            value={alpha} 
-            onChange={e => setAlpha(Number(e.target.value))}
-            className="bg-[var(--surface-raised)] border border-[var(--border-subtle)] rounded p-2 text-sm outline-none"
-          >
-            <option value={0.01}>Alpha: 1%</option>
-            <option value={0.05}>Alpha: 5%</option>
-            <option value={0.10}>Alpha: 10%</option>
-          </select>
-        )}
       </div>
 
       <div className="grid grid-cols-2 gap-6">
