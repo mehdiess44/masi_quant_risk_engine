@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid, ResponsiveContainer, Scatter, ComposedChart, BarChart, Bar } from 'recharts';
+import { AreaChart, Area, Line, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid, ResponsiveContainer, Scatter, ComposedChart, BarChart, Bar } from 'recharts';
 import TermTooltip from '../components/ui/TermTooltip';
 import GlassPanel from '../components/ui/GlassPanel';
 import StatusChip from '../components/ui/StatusChip';
@@ -41,7 +41,8 @@ export default function MLPage() {
     if (!data.preds?.predictions) return [];
     return data.preds.predictions.map(p => ({
       ...p,
-      violation_point: p.is_violation ? p.actual_return : null
+      date: String(p.date), // Ensure date is string to avoid NaN in category axis
+      violationPoint: p.is_violation ? p.var_predicted : null
     }));
   }, [data.preds]);
 
@@ -67,13 +68,13 @@ export default function MLPage() {
         <div className="bg-[var(--surface-void)] border border-[var(--border-visible)] p-3 rounded-[var(--radius-sm)]">
           <p className="text-[var(--text-secondary)] mb-2">{label}</p>
           {payload.map((entry, idx) => (
-            entry.dataKey !== 'violation_point' && (
+            (entry.dataKey === 'actual_return' || entry.dataKey === 'var_predicted') && (
               <p key={idx} style={{ color: entry.color }} className="font-['JetBrains_Mono']">
                 {entry.name}: {(entry.value * 100).toFixed(2)}%
               </p>
             )
           ))}
-          {payload.find(p => p.dataKey === 'violation_point' && p.value !== null) && (
+          {payload.find(p => p.dataKey === 'violationPoint' && p.value !== null) && (
             <p className="text-[var(--neon-loss)] font-bold mt-1">Violation</p>
           )}
         </div>
@@ -127,14 +128,14 @@ export default function MLPage() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
-                    <XAxis dataKey="date" stroke="var(--text-secondary)" tick={{fontFamily: 'JetBrains Mono', fontSize: 10}} minTickGap={30} />
+                    <XAxis dataKey="date" type="category" stroke="var(--text-secondary)" tick={{fontFamily: 'JetBrains Mono', fontSize: 10}} minTickGap={30} />
                     <YAxis stroke="var(--text-secondary)" tick={{fontFamily: 'JetBrains Mono', fontSize: 12}} />
                     <RechartsTooltip content={customTooltip} />
                     
                     <Area type="monotone" dataKey="actual_return" name="Rendement" stroke="var(--text-muted)" fill="url(#retArea)" />
-                    <Area type="monotone" dataKey="var_predicted" name="VaR Prédite" stroke="var(--neon-loss)" strokeWidth={1} fill="url(#varArea)" />
+                    <Line type="monotone" dataKey="var_predicted" name="VaR Prédite" stroke="rgba(239, 68, 68, 0.6)" strokeWidth={1} dot={false} />
                     
-                    <Scatter dataKey="violation_point" fill="var(--neon-loss)" className="animate-pulse" shape="circle" />
+                    <Scatter dataKey="violationPoint" fill="#EF4444" className="animate-pulse" shape="circle" />
                   </ComposedChart>
                 </ResponsiveContainer>
               )}
