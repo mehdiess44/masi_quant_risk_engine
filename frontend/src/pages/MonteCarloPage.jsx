@@ -190,6 +190,38 @@ export default function MonteCarloPage() {
               />
             </div>
           </GlassPanel>
+
+          {data && (
+            <GlassPanel className="mt-6">
+              <h3 className="text-lg font-medium mb-4">Calibration Active</h3>
+              <div className="space-y-2 mb-6">
+                <div className="flex justify-between text-sm">
+                  <span className="text-[var(--text-secondary)]">S₀ (Initial)</span>
+                  <span className="font-mono-data text-[var(--text-primary)]">{data.S0?.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[var(--text-secondary)]">µ (Rendement)</span>
+                  <span className="font-mono-data text-[var(--text-primary)]">{(data.mu * 100)?.toFixed(4)}%</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[var(--text-secondary)]">σ (Volatilité)</span>
+                  <span className="font-mono-data text-[var(--text-primary)]">{(data.sigma * 100)?.toFixed(4)}%</span>
+                </div>
+              </div>
+
+              <h3 className="text-lg font-medium mb-4">Percentiles (Retours)</h3>
+              <div className="space-y-2">
+                {['p1', 'p5', 'p10', 'p50', 'p90', 'p95', 'p99'].map(p => (
+                  <div key={p} className="flex justify-between text-sm">
+                    <span className="text-[var(--text-secondary)] uppercase">{p}</span>
+                    <span className={`font-mono-data ${data.percentiles?.[p] < 0 ? 'text-[var(--neon-loss)]' : 'text-[var(--neon-profit)]'}`}>
+                      {data.percentiles?.[p] ? (data.percentiles[p] * 100).toFixed(2) + '%' : '-'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </GlassPanel>
+          )}
         </div>
       </div>
     </div>
