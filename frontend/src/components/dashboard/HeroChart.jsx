@@ -7,10 +7,17 @@ export default function HeroChart({ data = [], markers = [] }) {
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
+    if (data.length === 0) return;
 
-    // Default dummy data if none provided
-    const chartData = data.length > 0 ? data : generateDummyData();
-    const chartMarkers = markers.length > 0 ? markers : generateDummyMarkers(chartData);
+    const mappedData = data.map(item => ({ 
+      time: item.date || item.time, 
+      open: item.open,
+      high: item.high,
+      low: item.low,
+      close: item.close !== undefined ? item.close : item.value 
+    }));
+    
+    const chartMarkers = markers.length > 0 ? markers : generateDummyMarkers(mappedData);
 
     const handleResize = () => {
       if(chartRef.current) {
@@ -57,14 +64,14 @@ export default function HeroChart({ data = [], markers = [] }) {
     chartRef.current = chart;
 
     const candlestickSeries = chart.addCandlestickSeries({
-      upColor: '#00FFA3',
-      downColor: '#FF2D55',
+      upColor: '#26a69a',
+      downColor: '#ef5350',
       borderVisible: false,
-      wickUpColor: '#00FFA3',
-      wickDownColor: '#FF2D55',
+      wickUpColor: '#26a69a',
+      wickDownColor: '#ef5350',
     });
 
-    candlestickSeries.setData(chartData);
+    candlestickSeries.setData(mappedData);
     candlestickSeries.setMarkers(chartMarkers);
 
     window.addEventListener('resize', handleResize);
@@ -85,30 +92,6 @@ export default function HeroChart({ data = [], markers = [] }) {
   );
 }
 
-// Helpers for visual demonstration
-function generateDummyData() {
-  const res = [];
-  let time = new Date('2023-01-01').getTime();
-  let open = 12000;
-  for (let i = 0; i < 100; i++) {
-    time += 24 * 60 * 60 * 1000; // +1 day
-    const volatility = (Math.random() - 0.5) * 150;
-    const close = open + volatility;
-    const high = Math.max(open, close) + Math.random() * 50;
-    const low = Math.min(open, close) - Math.random() * 50;
-    
-    res.push({
-      time: time / 1000,
-      open: Math.round(open),
-      high: Math.round(high),
-      low: Math.round(low),
-      close: Math.round(close)
-    });
-    open = close;
-  }
-  return res;
-}
-
 function generateDummyMarkers(data) {
   const markers = [];
   // AI specific markers
@@ -121,18 +104,11 @@ function generateDummyMarkers(data) {
       text: 'AI BUY',
     });
     markers.push({
-      time: data[60].time,
+      time: data[data.length - 20].time,
       position: 'aboveBar',
       color: '#FFB020',
       shape: 'arrowDown',
       text: 'AI SELL',
-    });
-    markers.push({
-      time: data[85].time,
-      position: 'belowBar',
-      color: '#00D4FF',
-      shape: 'arrowUp',
-      text: 'AI BUY',
     });
   }
   return markers;

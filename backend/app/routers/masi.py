@@ -24,6 +24,9 @@ def get_history(
     for _, row in df.iterrows():
         records.append(MASIDataPoint(
             date=row['Date'],
+            open=float(row['Ouv.']),
+            high=float(row['Plus_Haut']),
+            low=float(row['Plus_Bas']),
             close=float(row['Close']),
             log_return=float(row['log_return']) if 'log_return' in row and not type(row['log_return']) == str else 0.0,
             return_lag_1=float(row['return_lag_1']) if 'return_lag_1' in row else None,

@@ -7,6 +7,9 @@ class MASIDataPoint(BaseModel):
     model_config = ConfigDict(strict=True)
 
     date: date
+    open: float = Field(..., description="Daily opening price")
+    high: float = Field(..., description="Daily high price")
+    low: float = Field(..., description="Daily low price")
     close: float = Field(..., description="Daily closing price")
     log_return: float = Field(..., description="Daily log return")
     return_lag_1: Optional[float] = None
