@@ -1,56 +1,121 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+:root {
+  /* Surfaces */
+  --surface-void: #050810;
+  --surface-raised: #0A1020;
+  --surface-hover: #0E1530;
+  --surface-glass: rgba(10, 16, 32, 0.85);
+  --surface-active: #121D38;
+
+  /* Neon Colors */
+  --neon-profit: #00FFA3;
+  --neon-loss: #FF2D55;
+  --neon-warning: #FFB020;
+  --neon-accent: #2D7CFF;
+  --neon-cyan: #00D4FF;
+
+  /* Text */
+  --text-primary: #E8ECF4;
+  --text-secondary: #7A8499;
+  --text-muted: #4A5568;
+
+  /* Borders */
+  --border-subtle: rgba(45, 124, 255, 0.08);
+  --border-visible: rgba(45, 124, 255, 0.15);
+  --border-glow: rgba(45, 124, 255, 0.30);
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* Spacing */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+}
 
 @layer base {
-  :root {
-    --background: 222 43% 6%; /* #090D16 */
-    --foreground: 210 40% 98%; /* #F9FAFB */
-    --card: 222 43% 6%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 43% 6%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 215 28% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 215 28% 17%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 215 28% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 215 28% 17%; /* #1F2937 */
-    --input: 215 28% 17%;
-    --ring: 212.7 26.8% 83.9%;
-    --radius: 0.125rem; /* rounded-sm pour haute densité */
-  }
-
   body {
-    background-color: #090D16;
-    color: #F9FAFB;
-    font-family: 'JetBrains Mono', monospace;
-    font-variant-numeric: tabular-nums;
+    background-color: var(--surface-void);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
   }
 }
 
-@layer components {
-  /* Override global pour la haute densité de données (type Bloomberg) */
-  .dense-panel {
-    @apply border border-[#1F2937] bg-[#0c111c] rounded-sm p-2 flex flex-col;
-  }
-  
-  .dense-card {
-    @apply border border-[#1F2937] rounded-sm bg-[#090D16];
-  }
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface-void);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-hover);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--surface-active);
+}
 
-  .dense-card-header {
-    @apply p-2 pb-0;
+@layer utilities {
+  .font-mono-data {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
   }
+  .glass-panel {
+    background-color: var(--surface-glass);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-visible);
+    border-radius: var(--radius-md);
+  }
+  .neon-glow-profit {
+    text-shadow: 0 0 10px rgba(0, 255, 163, 0.5);
+  }
+  .neon-glow-loss {
+    text-shadow: 0 0 10px rgba(255, 45, 85, 0.5);
+  }
+  .neon-glow-accent {
+    text-shadow: 0 0 10px rgba(45, 124, 255, 0.5);
+  }
+}
 
-  .dense-card-content {
-    @apply p-2;
-  }
+/* Animation keyframes */
+@keyframes tooltipIn {
+  from { opacity: 0; transform: translateY(4px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  50% { opacity: 0.7; filter: brightness(1.2); }
+}
+@keyframes countUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
