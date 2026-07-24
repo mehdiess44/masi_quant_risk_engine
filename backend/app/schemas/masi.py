@@ -15,7 +15,7 @@ class MASIDataPoint(BaseModel):
     return_lag_1: Optional[float] = None
     return_lag_2: Optional[float] = None
     return_lag_3: Optional[float] = None
-    return_lag_4: Optional[float] = None
+
     return_lag_5: Optional[float] = None
     volatility_10d: Optional[float] = None
     volatility_20d: Optional[float] = None
