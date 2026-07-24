@@ -3,11 +3,9 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGri
 import TermTooltip from '../components/ui/TermTooltip';
 import GlassPanel from '../components/ui/GlassPanel';
 import GlowSlider from '../components/ui/GlowSlider';
-import { useMode } from '../context/ModeContext';
 import { runMonteCarlo } from '../services/api';
 
 export default function MonteCarloPage() {
-  const { isAdvanced } = useMode();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [params, setParams] = useState({
@@ -69,7 +67,7 @@ export default function MonteCarloPage() {
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        {(!isAdvanced ? ['var_pct', 'es_pct'] : ['var', 'es', 'var_pct', 'es_pct']).map(metric => {
+        {(['var', 'es', 'var_pct', 'es_pct']).map(metric => {
           const val = data?.[metric] ?? 0;
           const isPct = metric.includes('pct');
           const displayVal = isPct ? `${(val * 100).toFixed(2)}%` : val.toLocaleString(undefined, { maximumFractionDigits: 2 });
@@ -164,7 +162,7 @@ export default function MonteCarloPage() {
                 min={0.01} max={0.10} step={0.01} 
                 value={params.alpha} 
                 onChange={(val) => setParams({...params, alpha: val})} 
-                label={!isAdvanced ? `Niveau de confiance ${((1 - params.alpha)*100).toFixed(0)}%` : "Alpha"} 
+                label="Alpha" 
                 displayValue={params.alpha.toString()} 
               />
               <GlowSlider 

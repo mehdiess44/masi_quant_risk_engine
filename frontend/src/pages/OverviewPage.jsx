@@ -7,11 +7,9 @@ import LEDStack from '../components/ui/LEDStack';
 import Sparkline from '../components/ui/Sparkline';
 import HeroChart from '../components/dashboard/HeroChart';
 import TradingPanel from '../components/dashboard/TradingPanel';
-import { useMode } from '../context/ModeContext';
 import { fetchMasiSummary, fetchBacktestingComparison, fetchTrafficLight, runMonteCarlo, fetchMasiHistory } from '../services/api';
 
 export default function OverviewPage() {
-  const { isAdvanced } = useMode();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({
     summary: null,
@@ -117,7 +115,7 @@ export default function OverviewPage() {
                   <span>{mcP}%</span>
                   <span className="text-[var(--text-tertiary)]">vs {pTarget}%</span>
                 </div>
-                {isAdvanced && comparison?.mc && (
+                {comparison?.mc && (
                   <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-mono-data text-[var(--text-secondary)]">
                     <div>LR: {comparison.mc.LR_statistic?.toFixed(2)}</div>
                     <div>P: {comparison.mc.p_value?.toFixed(3)}</div>
@@ -142,7 +140,7 @@ export default function OverviewPage() {
                   <span>{mlP}%</span>
                   <span className="text-[var(--text-tertiary)]">vs {pTarget}%</span>
                 </div>
-                {isAdvanced && comparison?.ml && (
+                {comparison?.ml && (
                   <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-mono-data text-[var(--text-secondary)]">
                     <div>LR: {comparison.ml.LR_statistic?.toFixed(2)}</div>
                     <div>P: {comparison.ml.p_value?.toFixed(3)}</div>

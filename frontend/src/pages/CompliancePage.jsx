@@ -11,12 +11,19 @@ import { fetchBacktestingComparison, fetchTrafficLight, fetchKupiecTest } from '
 export default function CompliancePage() {
   const [alpha, setAlpha] = useState(0.05);
   const [windowSize, setWindowSize] = useState(250);
-  const [loading, setLoading] = useState(true);
+
+  // Différencier le chargement initial du rafraîchissement en arrière-plan
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [data, setData] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     async function loadData() {
-      setLoading(true);
+      if (!data) setIsInitialLoad(true);
+      else setIsRefreshing(true);
+
       try {
         const [comp, mcTraf, mlTraf, mcKup, mlKup] = await Promise.all([
           fetchBacktestingComparison(alpha),
@@ -25,17 +32,34 @@ export default function CompliancePage() {
           fetchKupiecTest('mc', alpha),
           fetchKupiecTest('ml', alpha)
         ]);
-        setData({ comp, mcTraf, mlTraf, mcKup, mlKup });
+
+        if (isMounted) {
+          setData({ comp, mcTraf, mlTraf, mcKup, mlKup });
+        }
       } catch (err) {
         console.error(err);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setIsInitialLoad(false);
+          setIsRefreshing(false);
+        }
       }
     }
-    loadData();
-  }, [alpha, windowSize]);
 
-  if (loading || !data) {
+    // Debouncing : Attend 300ms après la fin du mouvement du slider avant d'appeler l'API
+    const debounceTimer = setTimeout(() => {
+      loadData();
+    }, 300);
+
+    // Nettoyage si le composant est démonté ou si les dépendances changent avant la fin du délai
+    return () => {
+      isMounted = false;
+      clearTimeout(debounceTimer);
+    };
+  }, [alpha, windowSize]); // Écoute bien les sliders
+
+  // Affiche les Skeletons UNIQUEMENT au tout premier chargement de la page
+  if (isInitialLoad && !data) {
     return (
       <div className="space-y-8 pb-8 animate-pulse">
         <div className="flex items-center justify-between">
@@ -59,7 +83,6 @@ export default function CompliancePage() {
   const renderKupiecCard = (modelName, modelData) => {
     if (!modelData) return null;
     const passed = !modelData.reject_H0;
-    // Map LR to 0-10 gauge score (lower is better, <3.84 is passing for 95% conf)
     const lrVal = modelData.LR_statistic || 0;
     let score = 10 - (lrVal * 1.5);
     score = Math.max(0, Math.min(10, score));
@@ -78,7 +101,7 @@ export default function CompliancePage() {
             <div className={`text-2xl font-bold mb-4 ${passed ? 'text-[var(--neon-profit)]' : 'text-[var(--neon-loss)]'}`}>
               {passed ? 'APPROUVÉ' : 'REJETÉ'}
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-[var(--text-secondary)] font-['JetBrains_Mono']">
+            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-[var(--text-secondary)] font-mono-data">
               <div className="flex justify-between">
                 <span><TermTooltip term="LR Statistic">LR Stat</TermTooltip></span>
                 <span>{lrVal.toFixed(3)}</span>
@@ -125,9 +148,9 @@ export default function CompliancePage() {
         </h4>
         <div className="grid gap-1" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(12px, 1fr))' }}>
           {kupData.hit_sequence.map((hit, i) => (
-            <div 
-              key={i} 
-              className={`w-3 h-3 rounded-sm ${hit.is_violation ? 'bg-red-500' : 'bg-[#1A2235]'}`}
+            <div
+              key={i}
+              className={`w-3 h-3 rounded-sm transition-colors duration-300 ${hit.is_violation ? 'bg-red-500' : 'bg-[#1A2235]'}`}
               title={hit.is_violation ? 'Violation' : 'Pass'}
             />
           ))}
@@ -137,9 +160,10 @@ export default function CompliancePage() {
   };
 
   return (
-    <div className="space-y-8 pb-8">
+    // L'effet Soft-Loading : baisse de l'opacité pendant le recalcul
+    <div className={`space-y-8 pb-8 transition-opacity duration-300 ${isRefreshing ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
       <Confetti trigger={bothPass} />
-      
+
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold font-['Outfit']">
           <TermTooltip term="Bâle III">Conformité Bâle III</TermTooltip>
@@ -150,21 +174,21 @@ export default function CompliancePage() {
         <h3 className="text-sm font-medium mb-4 text-[var(--text-secondary)] uppercase tracking-wider">Paramètres de Backtesting</h3>
         <div className="flex gap-8">
           <div className="flex-1">
-            <GlowSlider 
-              min={0.01} max={0.10} step={0.01} 
-              value={alpha} 
-              onChange={setAlpha} 
-              label="Alpha (Niveau de confiance)" 
-              displayValue={alpha.toString()} 
+            <GlowSlider
+              min={0.01} max={0.10} step={0.01}
+              value={alpha}
+              onChange={setAlpha}
+              label="Alpha (Niveau de confiance)"
+              displayValue={alpha.toString()}
             />
           </div>
           <div className="flex-1">
-            <GlowSlider 
-              min={100} max={500} step={10} 
-              value={windowSize} 
-              onChange={setWindowSize} 
-              label="Fenêtre Glissante (Jours)" 
-              displayValue={windowSize.toString()} 
+            <GlowSlider
+              min={100} max={500} step={10}
+              value={windowSize}
+              onChange={setWindowSize}
+              label="Fenêtre Glissante (Jours)"
+              displayValue={windowSize.toString()}
             />
           </div>
         </div>
@@ -175,7 +199,7 @@ export default function CompliancePage() {
           <div className="flex flex-col items-center justify-center py-6">
             <h3 className="text-lg mb-6">Zone Bâle - MC</h3>
             <LEDStack zone={mcTraf?.result?.zone} label="Monte Carlo" size="md" />
-            <div className="text-xs text-[var(--text-secondary)] mt-4">(Sur fenêtre glissante : 250 jours)</div>
+            <div className="text-xs text-[var(--text-secondary)] mt-4">(Sur fenêtre glissante : {windowSize} jours)</div>
             <div className="mt-6 flex flex-col items-center">
               <StatusChip variant={mcTraf?.result?.zone === 'VERTE' ? 'success' : mcTraf?.result?.zone === 'JAUNE' ? 'warning' : 'danger'}>
                 {mcTraf?.result?.zone || 'N/A'}
@@ -195,11 +219,12 @@ export default function CompliancePage() {
             </div>
           </div>
         </GlassPanel>
+
         <GlassPanel hover>
           <div className="flex flex-col items-center justify-center py-6">
             <h3 className="text-lg mb-6">Zone Bâle - ML</h3>
             <LEDStack zone={mlTraf?.result?.zone} label="Machine Learning" size="md" />
-            <div className="text-xs text-[var(--text-secondary)] mt-4">(Sur fenêtre glissante : 250 jours)</div>
+            <div className="text-xs text-[var(--text-secondary)] mt-4">(Sur fenêtre glissante : {windowSize} jours)</div>
             <div className="mt-6 flex flex-col items-center">
               <StatusChip variant={mlTraf?.result?.zone === 'VERTE' ? 'success' : mlTraf?.result?.zone === 'JAUNE' ? 'warning' : 'danger'}>
                 {mlTraf?.result?.zone || 'N/A'}

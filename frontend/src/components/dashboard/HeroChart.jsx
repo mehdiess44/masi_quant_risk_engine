@@ -49,11 +49,11 @@ export default function HeroChart({ data = [], markers = [] }) {
       layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#7A8499' },
       grid: { vertLines: { color: 'rgba(45, 124, 255, 0.05)' }, horzLines: { color: 'rgba(45, 124, 255, 0.05)' } },
       crosshair: { mode: CrosshairMode.Normal },
-      timeScale: { 
+      timeScale: {
         borderColor: 'rgba(45, 124, 255, 0.08)',
-        rightOffset: 5 
+        rightOffset: 5
       },
-      rightPriceScale: { 
+      rightPriceScale: {
         borderColor: 'rgba(45, 124, 255, 0.08)',
         priceFormat: { type: 'price', precision: 3, minMove: 0.001 }
       },

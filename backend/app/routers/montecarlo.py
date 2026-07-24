@@ -1,3 +1,4 @@
+import numpy as np
 from fastapi import APIRouter
 from app.schemas import MonteCarloRequest, MonteCarloResponse
 from app.services.monte_carlo_engine import MonteCarloEngine
@@ -7,6 +8,7 @@ mc_engine = MonteCarloEngine()
 
 @router.post("/simulate", response_model=MonteCarloResponse)
 def simulate(request: MonteCarloRequest):
+    np.random.seed(42)
     custom_params = None
     if request.custom_params:
         custom_params = {

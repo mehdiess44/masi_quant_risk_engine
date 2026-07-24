@@ -1,9 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { useMode } from '../../context/ModeContext';
 
 export default function Sidebar() {
-  const { isAdvanced, toggleMode } = useMode();
 
   return (
     <div className="w-[220px] h-screen fixed left-0 top-0 flex flex-col justify-between" 
@@ -31,17 +29,6 @@ export default function Sidebar() {
       
       <div className="p-6 flex flex-col gap-4 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
         
-        {/* Toggle Mode */}
-        <div className="flex items-center justify-between p-3 rounded-[var(--radius-sm)] bg-[var(--surface-active)] border border-[var(--border-subtle)]">
-          <span className="text-xs font-medium text-[var(--text-secondary)]">Advanced Mode</span>
-          <button 
-            onClick={toggleMode}
-            className={`w-10 h-5 rounded-full relative transition-colors ${isAdvanced ? 'bg-[var(--neon-accent)]' : 'bg-[var(--surface-hover)]'}`}
-          >
-            <div className={`w-3.5 h-3.5 rounded-full bg-white absolute top-[3px] transition-all ${isAdvanced ? 'left-[22px]' : 'left-[3px]'}`} />
-          </button>
-        </div>
-
         {/* Quick Stats */}
         <div className="flex flex-col gap-2 mt-2">
           <div className="flex justify-between items-center text-xs">

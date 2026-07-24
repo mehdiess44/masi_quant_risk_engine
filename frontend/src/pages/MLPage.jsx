@@ -4,11 +4,9 @@ import TermTooltip from '../components/ui/TermTooltip';
 import GlassPanel from '../components/ui/GlassPanel';
 import StatusChip from '../components/ui/StatusChip';
 import NeonGauge from '../components/ui/NeonGauge';
-import { useMode } from '../context/ModeContext';
 import { fetchMLPredictions, fetchMLFeatureImportance } from '../services/api';
 
 export default function MLPage() {
-  const { isAdvanced } = useMode();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ preds: null, feats: null });
 
@@ -54,18 +52,9 @@ export default function MLPage() {
   const featsData = useMemo(() => {
     if (!data.feats?.features) return [];
     let feats = [...data.feats.features].sort((a, b) => b.importance - a.importance).slice(0, 8);
-    if (!isAdvanced) {
-      feats = feats.map(f => {
-        let name = f.feature_name;
-        if (name.includes('EWMA_Vol')) name = 'Volatilité récente';
-        if (name.includes('return_lag')) name = 'Rendement historique';
-        return { ...f, display_name: name };
-      });
-    } else {
-      feats = feats.map(f => ({ ...f, display_name: f.feature_name }));
-    }
+    feats = feats.map(f => ({ ...f, display_name: f.feature_name }));
     return feats.reverse(); // For horizontal bar chart bottom-to-top
-  }, [data.feats, isAdvanced]);
+  }, [data.feats]);
 
   const customTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {

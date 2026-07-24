@@ -58,8 +58,9 @@ class MonteCarloEngine:
         # Mouvement Brownien Géométrique vectorisé (multi-step)
         # Z de dimension (horizon_days, n_simulations)
         Z = np.random.standard_normal((horizon_days, n_simulations))
-        drift = (mu - 0.5 * sigma**2) * dt
-        daily_log_returns = drift + sigma * np.sqrt(dt) * Z
+        sigma_daily = sigma / np.sqrt(252)
+        drift = (mu - 0.5 * sigma_daily**2) * dt
+        daily_log_returns = drift + sigma_daily * np.sqrt(dt) * Z
         
         # Cumul des rendements sur l'horizon
         cumulative_log_returns = np.cumsum(daily_log_returns, axis=0)
