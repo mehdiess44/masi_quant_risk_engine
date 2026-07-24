@@ -6,11 +6,9 @@ import NeonGauge from '../components/ui/NeonGauge';
 import LEDStack from '../components/ui/LEDStack';
 import Confetti from '../components/ui/Confetti';
 import GlowSlider from '../components/ui/GlowSlider';
-import { useMode } from '../context/ModeContext';
 import { fetchBacktestingComparison, fetchTrafficLight, fetchKupiecTest } from '../services/api';
 
 export default function CompliancePage() {
-  const { isAdvanced } = useMode();
   const [alpha, setAlpha] = useState(0.05);
   const [windowSize, setWindowSize] = useState(250);
   const [loading, setLoading] = useState(true);
@@ -18,6 +16,7 @@ export default function CompliancePage() {
 
   useEffect(() => {
     async function loadData() {
+      setLoading(true);
       try {
         const [comp, mcTraf, mlTraf, mcKup, mlKup] = await Promise.all([
           fetchBacktestingComparison(alpha),
@@ -112,6 +111,7 @@ export default function CompliancePage() {
             )}
           </div>
         </div>
+        <div className="text-xs text-[var(--text-secondary)] text-center mt-2">(Sur historique global : 5 ans)</div>
       </GlassPanel>
     );
   };
@@ -175,6 +175,7 @@ export default function CompliancePage() {
           <div className="flex flex-col items-center justify-center py-6">
             <h3 className="text-lg mb-6">Zone Bâle - MC</h3>
             <LEDStack zone={mcTraf?.result?.zone} label="Monte Carlo" size="md" />
+            <div className="text-xs text-[var(--text-secondary)] mt-4">(Sur fenêtre glissante : 250 jours)</div>
             <div className="mt-6 flex flex-col items-center">
               <StatusChip variant={mcTraf?.result?.zone === 'VERTE' ? 'success' : mcTraf?.result?.zone === 'JAUNE' ? 'warning' : 'danger'}>
                 {mcTraf?.result?.zone || 'N/A'}
@@ -185,7 +186,7 @@ export default function CompliancePage() {
                   <span className="text-[var(--text-primary)]">{mcTraf.result.n_exceptions}</span>
                   <span className="text-right">Seuil Vert (≤) :</span>
                   <span className="text-[var(--neon-profit)]">{mcTraf.result.green_threshold}</span>
-                  <span className="text-right">Seuil Jaune (<) :</span>
+                  <span className="text-right">Seuil Jaune (&lt;) :</span>
                   <span className="text-[var(--neon-warning)]">{mcTraf.result.yellow_threshold}</span>
                   <span className="text-right font-bold mt-1">Multiplicateur :</span>
                   <span className="text-[var(--text-primary)] font-bold mt-1">×{mcTraf.result.capital_multiplier?.toFixed(2)}</span>
@@ -198,6 +199,7 @@ export default function CompliancePage() {
           <div className="flex flex-col items-center justify-center py-6">
             <h3 className="text-lg mb-6">Zone Bâle - ML</h3>
             <LEDStack zone={mlTraf?.result?.zone} label="Machine Learning" size="md" />
+            <div className="text-xs text-[var(--text-secondary)] mt-4">(Sur fenêtre glissante : 250 jours)</div>
             <div className="mt-6 flex flex-col items-center">
               <StatusChip variant={mlTraf?.result?.zone === 'VERTE' ? 'success' : mlTraf?.result?.zone === 'JAUNE' ? 'warning' : 'danger'}>
                 {mlTraf?.result?.zone || 'N/A'}
@@ -208,7 +210,7 @@ export default function CompliancePage() {
                   <span className="text-[var(--text-primary)]">{mlTraf.result.n_exceptions}</span>
                   <span className="text-right">Seuil Vert (≤) :</span>
                   <span className="text-[var(--neon-profit)]">{mlTraf.result.green_threshold}</span>
-                  <span className="text-right">Seuil Jaune (<) :</span>
+                  <span className="text-right">Seuil Jaune (&lt;) :</span>
                   <span className="text-[var(--neon-warning)]">{mlTraf.result.yellow_threshold}</span>
                   <span className="text-right font-bold mt-1">Multiplicateur :</span>
                   <span className="text-[var(--text-primary)] font-bold mt-1">×{mlTraf.result.capital_multiplier?.toFixed(2)}</span>
