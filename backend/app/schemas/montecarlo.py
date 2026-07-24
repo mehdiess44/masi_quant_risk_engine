@@ -5,8 +5,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 class MonteCarloRequest(BaseModel):
     model_config = ConfigDict(strict=True)
 
-    n_simulations: int = Field(default=100_000, ge=10_000, le=500_000)
-    horizon_days: int = Field(default=1, ge=1, le=10)
+    n_simulations: int = Field(default=10_000, ge=10_000, le=500_000)
+    horizon_days: int = Field(default=252, ge=1, le=2520)
     alpha: float = Field(default=0.05, gt=0.0001, le=0.50)
     
     custom_params: bool = Field(default=False, description="Set to True to override mu, sigma, S0")

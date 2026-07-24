@@ -34,65 +34,90 @@ class MonteCarloEngine:
                 sigma = custom_params['sigma']
             if 'S0' in custom_params and custom_params['S0'] is not None:
                 s0 = custom_params['S0']
+        else:
+            try:
+                from app.data_pipeline import load_full_data
+                df = load_full_data()
+                if not df.empty:
+                    if 'log_return' not in df.columns:
+                        df['log_return'] = np.log(df['Close'] / df['Close'].shift(1))
+                    recent = df['log_return'].tail(252).dropna()
+                    if len(recent) > 0:
+                        mu = float(np.mean(recent))
+                        sigma = float(np.std(recent, ddof=1))
+                    s0 = float(df['Close'].iloc[-1])
+            except ImportError:
+                pass
                 
         if sigma <= 0:
             raise ValueError("La volatilité doit être strictement positive")
             
-        dt = horizon_days / 252.0
+        # Les paramètres mu et sigma sont quotidiens, donc dt = 1 pas quotidien
+        dt = 1.0
         
-        # Mouvement Brownien Géométrique vectorisé
-        np.random.seed(42)
-        Z = np.random.standard_normal(n_simulations)
+        # Mouvement Brownien Géométrique vectorisé (multi-step)
+        # Z de dimension (horizon_days, n_simulations)
+        Z = np.random.standard_normal((horizon_days, n_simulations))
         drift = (mu - 0.5 * sigma**2) * dt
-        diffusion = sigma * np.sqrt(dt) * Z
-        S_t = s0 * np.exp(drift + diffusion)
+        daily_log_returns = drift + sigma * np.sqrt(dt) * Z
         
-        # Calcul des rendements simulés
-        simulated_returns = (S_t - s0) / s0
+        # Cumul des rendements sur l'horizon
+        cumulative_log_returns = np.cumsum(daily_log_returns, axis=0)
         
-        # Tri des rendements pour VaR et ES
-        sorted_returns = np.sort(simulated_returns)
+        # Prix final S_T
+        S_T = s0 * np.exp(cumulative_log_returns[-1])
+        
+        # Calcul VaR et ES sur les log-rendements cumulatifs finaux (espace log-normal)
+        final_log_returns = cumulative_log_returns[-1]
+        sorted_returns = np.sort(final_log_returns)
         var_index = int(n_simulations * alpha)
         
-        # VaR = percentile alpha des rendements (négatif)
+        # VaR = percentile alpha des log-rendements (négatif)
         var_pct = sorted_returns[var_index]
         # ES = moyenne des rendements pires que la VaR
         es_pct = np.mean(sorted_returns[:var_index])
         
-        # En valeur absolue (montant)
-        var_value = var_pct * s0
-        es_value = es_pct * s0
+        # En valeur absolue (montant basé sur S0)
+        # Note: on utilise np.exp pour repasser en arithmétique pour le montant monétaire si besoin,
+        # mais la VaR absolue est classiquement S0 * (1 - exp(var_pct)) ou S0 * var_pct pour de petits pourcentages.
+        # On garde S0 * (exp(var_pct) - 1) pour être exact mathématiquement.
+        var_value = s0 * (np.exp(var_pct) - 1)
+        es_value = s0 * (np.exp(es_pct) - 1)
         
         # Downsampling à EXACTEMENT 200 trajectoires pour le front-end
-        # On renvoie une matrice de 2 points par trajectoire : [S0, S_t]
+        # On renvoie des trajectoires complètes de (horizon_days + 1) points
         step = max(1, n_simulations // 200)
-        sampled_st = S_t[::step][:200]
-        # S'il en manque (ex: n_simulations=100), on prend ce qu'on peut, mais n_sim >= 10000 est garanti par le modèle
-        sample_paths = [[float(s0), float(st)] for st in sampled_st]
+        sampled_indices = np.arange(0, n_simulations, step)[:200]
         
+        sample_paths = []
+        for i in sampled_indices:
+            # Trajectoire: S0 puis S0 * exp(cum_returns)
+            path = [float(s0)] + (s0 * np.exp(cumulative_log_returns[:, i])).tolist()
+            sample_paths.append(path)
+            
         # Histogramme pré-agrégé (60 bins)
-        counts, bin_edges = np.histogram(simulated_returns, bins=60)
+        counts, bin_edges = np.histogram(final_log_returns, bins=60)
         distribution_bins = [
             {"bin_start": float(bin_edges[i]), "bin_end": float(bin_edges[i+1]), "count": int(counts[i])}
             for i in range(len(counts))
         ]
         
-        # Percentiles
+        # Percentiles sur les log-rendements
         percentiles = {
-            "p1": float(np.percentile(simulated_returns, 1)),
-            "p5": float(np.percentile(simulated_returns, 5)),
-            "p10": float(np.percentile(simulated_returns, 10)),
-            "p50": float(np.percentile(simulated_returns, 50)),
-            "p90": float(np.percentile(simulated_returns, 90)),
-            "p95": float(np.percentile(simulated_returns, 95)),
-            "p99": float(np.percentile(simulated_returns, 99))
+            "p1": float(np.percentile(final_log_returns, 1)),
+            "p5": float(np.percentile(final_log_returns, 5)),
+            "p10": float(np.percentile(final_log_returns, 10)),
+            "p50": float(np.percentile(final_log_returns, 50)),
+            "p90": float(np.percentile(final_log_returns, 90)),
+            "p95": float(np.percentile(final_log_returns, 95)),
+            "p99": float(np.percentile(final_log_returns, 99))
         }
         
         return {
             "var": float(var_value),
             "es": float(es_value),
-            "var_pct": float(var_pct),
-            "es_pct": float(es_pct),
+            "var_pct": float(np.exp(var_pct) - 1),  # Conversion en arithmétique pour affichage UI
+            "es_pct": float(np.exp(es_pct) - 1),
             "mu": float(mu),
             "sigma": float(sigma),
             "S0": float(s0),
