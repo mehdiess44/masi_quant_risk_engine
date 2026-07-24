@@ -9,18 +9,22 @@ export default function HeroChart({ data = [], markers = [] }) {
     if (!chartContainerRef.current) return;
     if (data.length === 0) return;
 
-    const mappedData = data.map(item => ({ 
-      time: item.date || item.time, 
-      open: item.open,
-      high: item.high,
-      low: item.low,
-      close: item.close !== undefined ? item.close : item.value 
-    }));
-    
+    // 🛠️ MAPPAGE ROBUSTE OHLC
+    const mappedData = data.map(item => {
+      const c = item.close !== undefined ? item.close : item.value;
+      return { 
+        time: item.date || item.time, 
+        open: item.open !== undefined ? item.open : c,
+        high: item.high !== undefined ? item.high : c,
+        low: item.low !== undefined ? item.low : c,
+        close: c 
+      };
+    });
+
     const chartMarkers = markers.length > 0 ? markers : generateDummyMarkers(mappedData);
 
     const handleResize = () => {
-      if(chartRef.current) {
+      if (chartRef.current) {
         chartRef.current.applyOptions({
           width: chartContainerRef.current.clientWidth,
         });
@@ -60,20 +64,19 @@ export default function HeroChart({ data = [], markers = [] }) {
         borderColor: 'rgba(45, 124, 255, 0.08)',
       },
     });
-    
+
     chartRef.current = chart;
 
-    // Candlestick configuration as per strict requirements
-    const candlestickSeries = chart.addCandlestickSeries({
+    const series = chart.addCandlestickSeries({
       upColor: '#26a69a',
       downColor: '#ef5350',
       borderVisible: false,
       wickUpColor: '#26a69a',
-      wickDownColor: '#ef5350',
+      wickDownColor: '#ef5350'
     });
 
-    candlestickSeries.setData(mappedData);
-    candlestickSeries.setMarkers(chartMarkers);
+    series.setData(mappedData);
+    series.setMarkers(chartMarkers);
 
     window.addEventListener('resize', handleResize);
 
@@ -85,8 +88,8 @@ export default function HeroChart({ data = [], markers = [] }) {
 
   return (
     <div className="relative w-full h-[400px]">
-      <div 
-        ref={chartContainerRef} 
+      <div
+        ref={chartContainerRef}
         className="w-full h-full font-mono-data"
       />
     </div>
@@ -95,7 +98,6 @@ export default function HeroChart({ data = [], markers = [] }) {
 
 function generateDummyMarkers(data) {
   const markers = [];
-  // AI specific markers
   if (data.length > 50) {
     markers.push({
       time: data[20].time,
