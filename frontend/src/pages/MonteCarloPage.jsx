@@ -56,7 +56,7 @@ export default function MonteCarloPage() {
     if (!data?.distribution_bins) return [];
     return data.distribution_bins.map(b => ({
       bin: b.bin,
-      count: b.count
+      count: b.frequency
     }));
   }, [data?.distribution_bins]);
 
@@ -64,7 +64,7 @@ export default function MonteCarloPage() {
     <div className="space-y-6 pb-8">
       <div className="flex items-center gap-2">
         <h1 className="text-2xl font-bold font-['Outfit']">
-          🎲 <TermTooltip term="Monte Carlo">Simulation Monte Carlo</TermTooltip>
+          <TermTooltip term="Monte Carlo">Simulation Monte Carlo</TermTooltip>
         </h1>
       </div>
 
