@@ -74,7 +74,7 @@ export default function MLPage() {
             )
           ))}
           {payload.find(p => p.dataKey === 'violation_point' && p.value !== null) && (
-            <p className="text-[var(--neon-loss)] font-bold mt-1">⚠️ Violation</p>
+            <p className="text-[var(--neon-loss)] font-bold mt-1">Violation</p>
           )}
         </div>
       );
@@ -86,7 +86,7 @@ export default function MLPage() {
     <div className="space-y-6 pb-8">
       <div className="flex items-center gap-2">
         <h1 className="text-2xl font-bold font-['Outfit']">
-          🤖 <TermTooltip term="Régression Quantile">ML — Régression Quantile</TermTooltip>
+          <TermTooltip term="Régression Quantile">ML — Régression Quantile</TermTooltip>
         </h1>
       </div>
 
@@ -132,7 +132,7 @@ export default function MLPage() {
                     <RechartsTooltip content={customTooltip} />
                     
                     <Area type="monotone" dataKey="actual_return" name="Rendement" stroke="var(--text-muted)" fill="url(#retArea)" />
-                    <Area type="monotone" dataKey="var_predicted" name="VaR Prédite" stroke="var(--neon-loss)" strokeWidth={2} fill="url(#varArea)" />
+                    <Area type="monotone" dataKey="var_predicted" name="VaR Prédite" stroke="var(--neon-loss)" strokeWidth={1} fill="url(#varArea)" />
                     
                     <Scatter dataKey="violation_point" fill="var(--neon-loss)" className="animate-pulse" shape="circle" />
                   </ComposedChart>
