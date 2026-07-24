@@ -5,12 +5,14 @@ import StatusChip from '../components/ui/StatusChip';
 import NeonGauge from '../components/ui/NeonGauge';
 import LEDStack from '../components/ui/LEDStack';
 import Confetti from '../components/ui/Confetti';
+import GlowSlider from '../components/ui/GlowSlider';
 import { useMode } from '../context/ModeContext';
 import { fetchBacktestingComparison, fetchTrafficLight, fetchKupiecTest } from '../services/api';
 
 export default function CompliancePage() {
   const { isAdvanced } = useMode();
-  const alpha = 0.05;
+  const [alpha, setAlpha] = useState(0.05);
+  const [windowSize, setWindowSize] = useState(250);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
 
@@ -19,10 +21,10 @@ export default function CompliancePage() {
       try {
         const [comp, mcTraf, mlTraf, mcKup, mlKup] = await Promise.all([
           fetchBacktestingComparison(alpha),
-          fetchTrafficLight('mc'),
-          fetchTrafficLight('ml'),
-          fetchKupiecTest('mc'),
-          fetchKupiecTest('ml')
+          fetchTrafficLight('mc', windowSize, alpha),
+          fetchTrafficLight('ml', windowSize, alpha),
+          fetchKupiecTest('mc', alpha),
+          fetchKupiecTest('ml', alpha)
         ]);
         setData({ comp, mcTraf, mlTraf, mcKup, mlKup });
       } catch (err) {
@@ -32,7 +34,7 @@ export default function CompliancePage() {
       }
     }
     loadData();
-  }, [alpha]);
+  }, [alpha, windowSize]);
 
   if (loading || !data) {
     return (
@@ -94,7 +96,20 @@ export default function CompliancePage() {
                 <span>x (fails)</span>
                 <span>{modelData.x || 0}</span>
               </div>
+              <div className="flex justify-between">
+                <span><TermTooltip term="p_hat (Observé)">p̂ (obs)</TermTooltip></span>
+                <span>{modelData.p_hat ? (modelData.p_hat * 100).toFixed(2) + '%' : 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span><TermTooltip term="p (Cible)">p (cible)</TermTooltip></span>
+                <span>{modelData.p ? (modelData.p * 100).toFixed(2) + '%' : '5.00%'}</span>
+              </div>
             </div>
+            {modelData.verdict && (
+              <div className="mt-4 text-xs text-[var(--text-tertiary)] italic border-t border-[var(--border-subtle)] pt-2">
+                "{modelData.verdict}"
+              </div>
+            )}
           </div>
         </div>
       </GlassPanel>
@@ -131,15 +146,51 @@ export default function CompliancePage() {
         </h1>
       </div>
 
+      <GlassPanel className="p-4">
+        <h3 className="text-sm font-medium mb-4 text-[var(--text-secondary)] uppercase tracking-wider">Paramètres de Backtesting</h3>
+        <div className="flex gap-8">
+          <div className="flex-1">
+            <GlowSlider 
+              min={0.01} max={0.10} step={0.01} 
+              value={alpha} 
+              onChange={setAlpha} 
+              label="Alpha (Niveau de confiance)" 
+              displayValue={alpha.toString()} 
+            />
+          </div>
+          <div className="flex-1">
+            <GlowSlider 
+              min={100} max={500} step={10} 
+              value={windowSize} 
+              onChange={setWindowSize} 
+              label="Fenêtre Glissante (Jours)" 
+              displayValue={windowSize.toString()} 
+            />
+          </div>
+        </div>
+      </GlassPanel>
+
       <div className="grid grid-cols-2 gap-6">
         <GlassPanel hover>
           <div className="flex flex-col items-center justify-center py-6">
             <h3 className="text-lg mb-6">Zone Bâle - MC</h3>
             <LEDStack zone={mcTraf?.result?.zone} label="Monte Carlo" size="md" />
-            <div className="mt-6">
+            <div className="mt-6 flex flex-col items-center">
               <StatusChip variant={mcTraf?.result?.zone === 'VERTE' ? 'success' : mcTraf?.result?.zone === 'JAUNE' ? 'warning' : 'danger'}>
                 {mcTraf?.result?.zone || 'N/A'}
               </StatusChip>
+              {mcTraf?.result && (
+                <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-[var(--text-secondary)] font-mono-data border border-[var(--border-subtle)] p-3 rounded bg-[var(--surface-active)]">
+                  <span className="text-right">Exceptions :</span>
+                  <span className="text-[var(--text-primary)]">{mcTraf.result.n_exceptions}</span>
+                  <span className="text-right">Seuil Vert (≤) :</span>
+                  <span className="text-[var(--neon-profit)]">{mcTraf.result.green_threshold}</span>
+                  <span className="text-right">Seuil Jaune (<) :</span>
+                  <span className="text-[var(--neon-warning)]">{mcTraf.result.yellow_threshold}</span>
+                  <span className="text-right font-bold mt-1">Multiplicateur :</span>
+                  <span className="text-[var(--text-primary)] font-bold mt-1">×{mcTraf.result.capital_multiplier?.toFixed(2)}</span>
+                </div>
+              )}
             </div>
           </div>
         </GlassPanel>
@@ -147,10 +198,22 @@ export default function CompliancePage() {
           <div className="flex flex-col items-center justify-center py-6">
             <h3 className="text-lg mb-6">Zone Bâle - ML</h3>
             <LEDStack zone={mlTraf?.result?.zone} label="Machine Learning" size="md" />
-            <div className="mt-6">
+            <div className="mt-6 flex flex-col items-center">
               <StatusChip variant={mlTraf?.result?.zone === 'VERTE' ? 'success' : mlTraf?.result?.zone === 'JAUNE' ? 'warning' : 'danger'}>
                 {mlTraf?.result?.zone || 'N/A'}
               </StatusChip>
+              {mlTraf?.result && (
+                <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-[var(--text-secondary)] font-mono-data border border-[var(--border-subtle)] p-3 rounded bg-[var(--surface-active)]">
+                  <span className="text-right">Exceptions :</span>
+                  <span className="text-[var(--text-primary)]">{mlTraf.result.n_exceptions}</span>
+                  <span className="text-right">Seuil Vert (≤) :</span>
+                  <span className="text-[var(--neon-profit)]">{mlTraf.result.green_threshold}</span>
+                  <span className="text-right">Seuil Jaune (<) :</span>
+                  <span className="text-[var(--neon-warning)]">{mlTraf.result.yellow_threshold}</span>
+                  <span className="text-right font-bold mt-1">Multiplicateur :</span>
+                  <span className="text-[var(--text-primary)] font-bold mt-1">×{mlTraf.result.capital_multiplier?.toFixed(2)}</span>
+                </div>
+              )}
             </div>
           </div>
         </GlassPanel>
