@@ -30,6 +30,9 @@ def clean_french_format(df: pd.DataFrame) -> pd.DataFrame:
             if has_percent:
                 df[col] = df[col] / 100.0
                 
+    if 'Close' in df.columns and df['Close'].max() < 100:
+        df['Close'] = df['Close'] * 1000
+                
     return df
 
 def compute_ml_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -58,26 +61,28 @@ def compute_ml_features(df: pd.DataFrame) -> pd.DataFrame:
     df['return_lag_5'] = df['log_return'].shift(5)
     
     # 5. Dist_SMA_20 = (Close - SMA_20) / SMA_20
-    sma_20 = df['Close'].rolling(window=20).mean()
+    sma_20 = df['Close'].rolling(window=20, min_periods=1).mean()
     df['Dist_SMA_20'] = (df['Close'] - sma_20) / sma_20
     
-    # 6. Amplitude_Intraday = (Plus_Haut - Plus_Bas) / Close
-    # Columns could be named Plus_Haut and Plus_Bas after stripping/replacing spaces
-    df['Amplitude_Intraday'] = (df['Plus_Haut'] - df['Plus_Bas']) / df['Close']
+    # 6. Amplitude_Intraday = (Plus_Haut - Plus_Bas) / Ouv.
+    # Dans le Notebook 3, c'est divisé par l'ouverture et non la clôture.
+    df['Amplitude_Intraday'] = (df['Plus_Haut'] - df['Plus_Bas']) / df['Ouv.']
     
     # 7. EWMA_Vol_10d = log_return.ewm(span=10).std()
-    df['EWMA_Vol_10d'] = df['log_return'].ewm(span=10).std()
+    df['EWMA_Vol_10d'] = df['log_return'].ewm(span=10, min_periods=2).std()
     
     # 8. EWMA_Vol_20d = log_return.ewm(span=20).std()
-    df['EWMA_Vol_20d'] = df['log_return'].ewm(span=20).std()
+    df['EWMA_Vol_20d'] = df['log_return'].ewm(span=20, min_periods=2).std()
     
-    # Keep only the requested features and drop NaNs
     features_cols = [
         'return_lag_1', 'return_lag_2', 'return_lag_3', 'return_lag_5',
         'Dist_SMA_20', 'Amplitude_Intraday', 'EWMA_Vol_10d', 'EWMA_Vol_20d'
     ]
     
-    df = df.dropna(subset=features_cols)
+    if 'Date' in df.columns:
+        target_date = pd.to_datetime('2020-01-02').date()
+        df = df[df['Date'] >= target_date].reset_index(drop=True)
+        
     return df
 
 def get_data_path(filename: str) -> str:
@@ -94,10 +99,27 @@ def get_data_path(filename: str) -> str:
 
 @functools.lru_cache(maxsize=1)
 def load_test_data() -> pd.DataFrame:
-    filepath = get_data_path('masi_test_clean.csv')
-    df = pd.read_csv(filepath)
-    df = clean_french_format(df)
-    return df
+    df_val = pd.read_csv(get_data_path('masi_val_clean.csv'))
+    df_test = pd.read_csv(get_data_path('masi_test_clean.csv'))
+    df_full = pd.concat([df_val, df_test], ignore_index=True)
+    df_full = clean_french_format(df_full)
+    if 'Date' in df_full.columns:
+        df_full = df_full.sort_values('Date').reset_index(drop=True)
+    return df_full
+
+@functools.lru_cache(maxsize=1)
+def load_eval_test_data() -> pd.DataFrame:
+    return load_test_data()
+
+@functools.lru_cache(maxsize=1)
+def load_pure_test_data() -> pd.DataFrame:
+    df_test = pd.read_csv(get_data_path('masi_test_clean.csv'))
+    # Les données sauvegardées par le notebook n'ont plus le format français, 
+    # mais on s'assure que Date est de type date.
+    if 'Date' in df_test.columns:
+        df_test['Date'] = pd.to_datetime(df_test['Date']).dt.date
+        df_test = df_test.sort_values('Date').reset_index(drop=True)
+    return df_test
 
 @functools.lru_cache(maxsize=1)
 def load_full_data() -> pd.DataFrame:

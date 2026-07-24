@@ -2,25 +2,49 @@ from fastapi import APIRouter, Request, Query, HTTPException
 from scipy.stats import norm
 from app.schemas import BacktestingResponse, BacktestingComparisonResponse
 from app.services.backtesting_engine import BacktestingEngine
-from app.data_pipeline import load_test_data
+from app.data_pipeline import load_test_data, load_eval_test_data, load_pure_test_data
+import numpy as np
 
 router = APIRouter(prefix="/api/backtesting", tags=["Backtesting"])
 bt_engine = BacktestingEngine()
 
 def get_mc_var_predictions(alpha: float):
-    df = load_test_data()
-    # Utilisation de la méthode paramétrique (EWMA_Vol_20d ou volatilité classique) comme proxy
-    # pour la VaR historique Monte Carlo si non pré-calculée.
-    z_score = norm.ppf(alpha)
-    if 'EWMA_Vol_20d' in df.columns:
-        vol = df['EWMA_Vol_20d']
-    elif 'volatility_20d' in df.columns:
-        vol = df['volatility_20d']
-    else:
-        vol = df['log_return'].rolling(20).std()
+    df_eval_test = load_eval_test_data()
+    df_test = load_pure_test_data()
+    
+    dates = df_test['Date'].tolist()
+    actual_returns = df_test['log_return'].tolist()
+    
+    var_preds = []
+    
+    FENETRE_GLISSANTE = 252
+    N_TRAJECTOIRES_BT = 10000
+    
+    # Fixer la seed pour assurer la reproductibilité stricte du backtest par rapport au notebook
+    np.random.seed(42)
+    
+    for target_date in dates:
+        # Fenêtre stricte du passé
+        fenetre_data = df_eval_test[df_eval_test['Date'] < target_date].tail(FENETRE_GLISSANTE)
         
-    var_preds = vol * z_score
-    return df['log_return'].tolist(), var_preds.fillna(0).tolist(), df['Date'].tolist()
+        if len(fenetre_data) < FENETRE_GLISSANTE:
+            var_preds.append(0.0)
+            continue
+            
+        rendements_fenetre = fenetre_data['log_return'].dropna()
+        mu_dyn = np.mean(rendements_fenetre)
+        sigma_dyn = np.std(rendements_fenetre)
+        
+        # Moteur Monte Carlo pour T=1
+        Z = np.random.standard_normal(N_TRAJECTOIRES_BT)
+        terme_drift = mu_dyn - (0.5 * sigma_dyn**2)
+        rendements_simules_T1 = terme_drift + (sigma_dyn * Z)
+        
+        # La VaR est le percentile (négatif) de la distribution simulée
+        var_pred = np.percentile(rendements_simules_T1, alpha * 100)
+        var_preds.append(float(var_pred))
+        
+    return actual_returns, var_preds, dates
 
 @router.get("/kupiec", response_model=BacktestingResponse)
 def get_kupiec_test(request: Request, model: str = Query("ml", pattern="^(mc|ml)$"), alpha: float = 0.05):

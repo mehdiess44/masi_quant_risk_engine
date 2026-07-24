@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import lightgbm as lgb
-from app.data_pipeline import load_test_data, compute_ml_features
+from app.data_pipeline import load_full_data, compute_ml_features
 
 class MLEngine:
     def __init__(self):
@@ -24,8 +24,8 @@ class MLEngine:
         return booster
 
     def predict_test_set(self):
-        # Charge et prépare les données de test
-        df_raw = load_test_data()
+        # Charge l'historique COMPLET pour calculer correctement l'EWMA sans cold-start (comme dans le Notebook 03)
+        df_raw = load_full_data()
         df_features = compute_ml_features(df_raw)
         
         # Extrait les features dans le bon ordre
