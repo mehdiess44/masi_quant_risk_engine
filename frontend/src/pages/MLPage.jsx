@@ -97,7 +97,7 @@ export default function MLPage() {
       </div>
 
       <div className="flex gap-4 items-center flex-wrap">
-        <GlassPanel className="flex items-center gap-6 p-4">
+        <GlassPanel className="flex items-center gap-6 p-4 flex-1">
           <NeonGauge value={gaugeScore} size="sm" label="Qualité" />
           <div className="flex flex-col gap-2">
             <StatusChip variant={data.preds?.violation_rate < 0.05 ? 'success' : 'danger'}>
@@ -107,11 +107,27 @@ export default function MLPage() {
               Modèle: {data.preds?.model_name || 'Loading...'}
             </StatusChip>
           </div>
+          <div className="flex flex-col gap-1 ml-auto text-xs text-[var(--text-secondary)] font-mono-data border-l border-[var(--border-subtle)] pl-4">
+            <div className="flex justify-between gap-4">
+              <span>Quantile Cible (α):</span>
+              <span className="text-[var(--text-primary)]">{data.preds?.quantile ? (data.preds.quantile * 100).toFixed(1) + '%' : '5.0%'}</span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span>Période de Test:</span>
+              <span className="text-[var(--text-primary)]">
+                {data.preds?.start_date || '...'} à {data.preds?.end_date || '...'}
+              </span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span>Prédictions Totales:</span>
+              <span className="text-[var(--text-primary)]">{data.preds?.total_predictions || data.preds?.predictions?.length || 0}</span>
+            </div>
+          </div>
         </GlassPanel>
         
         {lastPred && (
-          <>
-            <GlassPanel hover glow className="p-4 w-48 flex-1 min-w-[200px]">
+          <div className="flex gap-4">
+            <GlassPanel hover glow className="p-4 w-48 min-w-[180px]">
               <div className="text-xs uppercase text-[var(--text-secondary)] mb-2">
                 <TermTooltip term="VaR (Dernier Jour)">VaR (Dernier Jour)</TermTooltip>
               </div>
@@ -119,15 +135,15 @@ export default function MLPage() {
                 {(lastPred.var_predicted * 100).toFixed(2)}%
               </div>
             </GlassPanel>
-            <GlassPanel hover glow className="p-4 w-48 flex-1 min-w-[200px]">
-              <div className="text-xs uppercase text-[var(--text-secondary)] mb-2">
-                <TermTooltip term="ES (Estimé)">ES (Estimé)</TermTooltip>
+            <GlassPanel hover glow className="p-4 w-48 min-w-[180px]">
+              <div className="text-xs uppercase text-[var(--text-secondary)] mb-2 flex items-center gap-1">
+                <TermTooltip term="Expected Shortfall (ES) approximé à l'aide d'une heuristique VaR × 1.25">ES (Approximation)</TermTooltip>
               </div>
               <div className="text-2xl font-['JetBrains_Mono'] text-[var(--neon-warning)]">
                 {(lastPred.var_predicted * 1.25 * 100).toFixed(2)}%
               </div>
             </GlassPanel>
-          </>
+          </div>
         )}
       </div>
 
