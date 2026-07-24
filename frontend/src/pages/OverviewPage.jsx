@@ -8,7 +8,7 @@ import Sparkline from '../components/ui/Sparkline';
 import HeroChart from '../components/dashboard/HeroChart';
 import TradingPanel from '../components/dashboard/TradingPanel';
 import { useMode } from '../context/ModeContext';
-import { fetchMasiSummary, fetchBacktestingComparison, fetchTrafficLight, runMonteCarlo } from '../services/api';
+import { fetchMasiSummary, fetchBacktestingComparison, fetchTrafficLight, runMonteCarlo, fetchMasiHistory } from '../services/api';
 
 export default function OverviewPage() {
   const { isAdvanced } = useMode();
@@ -16,9 +16,9 @@ export default function OverviewPage() {
   const [data, setData] = useState({
     summary: null,
     comparison: null,
-    comparison: null,
     mcTraffic: null,
-    mlTraffic: null
+    mlTraffic: null,
+    history: null
   });
   const [executionResult, setExecutionResult] = useState(null);
   const [executing, setExecuting] = useState(false);
@@ -26,13 +26,14 @@ export default function OverviewPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [summary, comparison, mcTraffic, mlTraffic] = await Promise.all([
+        const [summary, comparison, mcTraffic, mlTraffic, history] = await Promise.all([
           fetchMasiSummary(),
           fetchBacktestingComparison(0.05),
           fetchTrafficLight('mc'),
-          fetchTrafficLight('ml')
+          fetchTrafficLight('ml'),
+          fetchMasiHistory()
         ]);
-        setData({ summary, comparison, mcTraffic, mlTraffic });
+        setData({ summary, comparison, mcTraffic, mlTraffic, history });
       } catch (err) {
         console.error(err);
       } finally {
@@ -57,7 +58,7 @@ export default function OverviewPage() {
     );
   }
 
-  const { summary, comparison, mcTraffic, mlTraffic } = data;
+  const { summary, comparison, mcTraffic, mlTraffic, history } = data;
 
   const getZoneScore = (zone) => zone === 'VERTE' ? 10 : zone === 'JAUNE' ? 5 : 0;
   const mcZoneScore = getZoneScore(mcTraffic?.result?.zone);
@@ -125,7 +126,7 @@ export default function OverviewPage() {
               <span className="text-xs bg-[var(--surface-active)] px-2 py-1 rounded text-[var(--neon-warning)] border border-[var(--border-subtle)]">AI SELL</span>
             </div>
           </div>
-          <HeroChart />
+          <HeroChart data={history?.data || []} />
         </GlassPanel>
 
         {/* Weather & Models */}
@@ -188,11 +189,8 @@ export default function OverviewPage() {
             console.log('Executing with params', params);
             // Translate riskLevel (1-100) to confidence level. E.g., riskLevel 50 -> 0.95 confidence (alpha 0.05).
             // A simple mapping: higher risk tolerance -> lower confidence level (higher alpha).
-            // Let's just use alpha = riskLevel / 100 for simplicity if riskLevel is alpha, or standard 0.95.
-            // Wait, standard is confidence_level. 
-            // If riskLevel is high (100), maybe they want to see extreme VaR.
-            // Let's map riskLevel 1-100 to alpha 0.01-0.10.
-            const alpha = Math.max(0.01, Math.min(0.50, params.riskLevel / 100));
+            // Risk Level 50% -> Alpha 0.05 (95% confidence).
+            const alpha = Math.max(0.001, Math.min(0.10, params.riskLevel / 1000));
             
             const portfolio_value = (summary?.last_close || 12450.32) * params.leverage;
 
