@@ -30,9 +30,27 @@ export default function Sidebar() {
       </div>
       
       <div className="p-6 flex flex-col gap-4 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
-        <div className="flex items-center gap-2 px-1">
-          <div className="w-2 h-2 rounded-full shadow-[0_0_8px_var(--neon-profit)]" style={{ background: 'var(--neon-profit)' }}></div>
-          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>API Live</span>
+        
+        {/* Toggle Mode */}
+        <div className="flex items-center justify-between p-3 rounded-[var(--radius-sm)] bg-[var(--surface-active)] border border-[var(--border-subtle)]">
+          <span className="text-xs font-medium text-[var(--text-secondary)]">Advanced Mode</span>
+          <button 
+            onClick={toggleMode}
+            className={`w-10 h-5 rounded-full relative transition-colors ${isAdvanced ? 'bg-[var(--neon-accent)]' : 'bg-[var(--surface-hover)]'}`}
+          >
+            <div className={`w-3.5 h-3.5 rounded-full bg-white absolute top-[3px] transition-all ${isAdvanced ? 'left-[22px]' : 'left-[3px]'}`} />
+          </button>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="flex flex-col gap-2 mt-2">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-[var(--text-secondary)]">System</span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full shadow-[0_0_8px_var(--neon-profit)] bg-[var(--neon-profit)]"></div>
+              <span className="text-[var(--text-primary)] font-mono-data">ONLINE</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
