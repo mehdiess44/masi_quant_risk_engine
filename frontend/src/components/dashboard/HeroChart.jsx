@@ -63,6 +63,7 @@ export default function HeroChart({ data = [], markers = [] }) {
     
     chartRef.current = chart;
 
+    // Candlestick configuration as per strict requirements
     const candlestickSeries = chart.addCandlestickSeries({
       upColor: '#26a69a',
       downColor: '#ef5350',
