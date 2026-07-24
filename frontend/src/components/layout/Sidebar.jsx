@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useMode } from '../../context/ModeContext';
 
 export default function Sidebar() {
-  const { isAdvanced, setIsAdvanced } = useMode();
+  const { isAdvanced, toggleMode } = useMode();
 
   return (
     <div className="w-[220px] h-screen fixed left-0 top-0 flex flex-col justify-between" 
@@ -31,7 +31,7 @@ export default function Sidebar() {
       
       <div className="p-6 flex flex-col gap-4 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
         <button 
-          onClick={() => setIsAdvanced(!isAdvanced)}
+          onClick={toggleMode}
           className="flex items-center justify-between w-full px-4 py-2 rounded-[var(--radius-sm)] transition-all"
           style={{ background: 'var(--surface-raised)', color: 'var(--text-primary)' }}
         >

@@ -35,7 +35,21 @@ export default function CompliancePage() {
   }, [alpha]);
 
   if (loading) {
-    return <div className="p-8 text-center text-[var(--text-secondary)]">Chargement des données réglementaires...</div>;
+    return (
+      <div className="space-y-8 pb-8 animate-pulse">
+        <div className="flex items-center justify-between">
+          <div className="h-8 w-64 bg-[var(--surface-raised)] rounded-[var(--radius-sm)]"></div>
+        </div>
+        <div className="grid grid-cols-2 gap-6">
+          <div className="h-[250px] bg-[var(--surface-raised)] rounded-[var(--radius-md)] border border-[var(--border-subtle)]"></div>
+          <div className="h-[250px] bg-[var(--surface-raised)] rounded-[var(--radius-md)] border border-[var(--border-subtle)]"></div>
+        </div>
+        <div className="grid grid-cols-2 gap-6">
+          <div className="h-[180px] bg-[var(--surface-raised)] rounded-[var(--radius-md)] border border-[var(--border-subtle)]"></div>
+          <div className="h-[180px] bg-[var(--surface-raised)] rounded-[var(--radius-md)] border border-[var(--border-subtle)]"></div>
+        </div>
+      </div>
+    );
   }
 
   const { comp, mcTraf, mlTraf, mcKup, mlKup } = data;
