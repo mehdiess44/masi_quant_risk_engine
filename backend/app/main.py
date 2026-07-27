@@ -40,10 +40,18 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configuration CORS pour autoriser le front-end React local
+# Configuration CORS pour autoriser le front-end React local et Docker
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:80",
+        "http://127.0.0.1:80",
+        "http://localhost",
+        "http://127.0.0.1"
+    ],
+    allow_origin_regex="https?://(localhost|127\.0\.0\.1)(:[0-9]+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
