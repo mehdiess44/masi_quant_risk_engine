@@ -5,9 +5,8 @@
 [![Python Version](https://img.shields.io/badge/python-3.12-blue.svg)](#)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109-green.svg)](#)
 [![React](https://img.shields.io/badge/React-18.x-cyan.svg)](#)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](#)
 
-Le **MASI Quant Risk Engine** est une plateforme open-source d'évaluation et de gestion des risques financiers de marché dédiée à l'indice boursier marocain **MASI (Moroccan All Shares Index)**.
+Le **MASI Quant Risk Engine** est une plateforme d'évaluation et de gestion des risques financiers de marché dédiée à l'indice boursier marocain **MASI (Moroccan All Shares Index)**.
 
 Le système combine des méthodes quantitatives avancées issues des modèles stochastiques (simulations de Monte Carlo multi-step reposant sur le Mouvement Brownien Géométrique) et des techniques d'Intelligence Artificielle modernes (Régression Quantile via LightGBM) pour calculer la **Value at Risk (VaR)** et l'**Expected Shortfall (ES)** sur différents horizons temporels et niveaux de confiance.
 
