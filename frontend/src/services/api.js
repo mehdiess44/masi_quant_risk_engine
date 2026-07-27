@@ -43,23 +43,36 @@ export const fetchMasiHistory = async (startDate, endDate) => {
 };
 
 /**
+ * GET /montecarlo/calibration
+ */
+export const fetchMonteCarloCalibration = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/montecarlo/calibration`);
+        return await handleResponse(response);
+    } catch (error) {
+        console.error("fetchMonteCarloCalibration Error:", error);
+        throw error;
+    }
+};
+
+/**
  * POST /montecarlo/simulate
  * Payload map: 
  * confidence_level (ex: 0.95) -> alpha (ex: 0.05)
  * portfolio_value -> S0
  */
-export const runMonteCarlo = async ({ portfolio_value, confidence_level, horizon_days, n_simulations, mu = 0.0, sigma = 0.15 }) => {
+export const runMonteCarlo = async ({ portfolio_value, confidence_level, alpha, horizon_days, n_simulations, mu, sigma, custom_params = false, seed = 42 }) => {
     try {
         // Prepare backend payload mapping
         const payload = {
             n_simulations: n_simulations || 100000,
             horizon_days: horizon_days || 1,
-            alpha: confidence_level !== undefined ? (1 - confidence_level) : 0.05,
+            alpha: confidence_level !== undefined ? (1 - confidence_level) : (alpha !== undefined ? alpha : 0.05),
+            custom_params: custom_params,
+            seed: seed
         };
 
-        // If a specific portfolio value is provided, we must activate custom_params
-        if (portfolio_value !== undefined) {
-            payload.custom_params = true;
+        if (custom_params && portfolio_value !== undefined && mu !== undefined && sigma !== undefined) {
             payload.S0 = portfolio_value;
             payload.mu = mu;
             payload.sigma = sigma;

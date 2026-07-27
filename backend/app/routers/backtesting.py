@@ -63,6 +63,7 @@ def get_kupiec_test(request: Request, model: str = Query("ml", pattern="^(mc|ml)
         preds = ml_engine.predict_test_set()
         returns = [p['actual_return'] for p in preds]
         vars_pred = [p['var_predicted'] for p in preds]
+        es_preds = [p.get('es_predicted', p['var_predicted'] - 0.002754) for p in preds]
         dates = [p['date'] for p in preds]
     else:
         returns, vars_pred, es_preds, dates = get_mc_var_predictions(alpha)
@@ -75,7 +76,7 @@ def get_kupiec_test(request: Request, model: str = Query("ml", pattern="^(mc|ml)
             "date": dates[i],
             "actual_return": float(returns[i]),
             "var_threshold": float(vars_pred[i]),
-            "es_threshold": float(es_preds[i]) if model == "mc" else float(vars_pred[i]) * 1.25,
+            "es_threshold": float(es_preds[i]),
             "is_violation": bool(res['hit_sequence_bools'][i])
         })
         

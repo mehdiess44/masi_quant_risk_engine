@@ -7,6 +7,7 @@ import LEDStack from '../components/ui/LEDStack';
 import Sparkline from '../components/ui/Sparkline';
 import HeroChart from '../components/dashboard/HeroChart';
 import TradingPanel from '../components/dashboard/TradingPanel';
+import TraceabilityBadge from '../components/ui/TraceabilityBadge';
 import { fetchMasiSummary, fetchBacktestingComparison, fetchTrafficLight, runMonteCarlo, fetchMasiHistory } from '../services/api';
 
 export default function OverviewPage() {
@@ -101,7 +102,10 @@ export default function OverviewPage() {
           <div className="col-span-2 grid grid-cols-2 gap-4">
             <GlassPanel hover className="p-4 flex flex-col justify-between">
               <div>
-                <h3 className="text-md font-medium mb-4">Monte Carlo</h3>
+                <h3 className="text-md font-medium mb-4 flex items-center justify-between">
+                  <span>Monte Carlo</span>
+                  <TraceabilityBadge metricId="var_mc" variant="short" />
+                </h3>
                 <div className="flex items-center justify-between">
                   <LEDStack zone={mcTraffic?.result?.zone || 'VERTE'} label="MC" size="sm" />
                   <StatusChip variant={mcTraffic?.result?.zone === 'JAUNE' ? 'warning' : mcTraffic?.result?.zone === 'ROUGE' ? 'danger' : 'success'} pulse={mcTraffic?.result?.zone === 'ROUGE'}>
@@ -126,7 +130,10 @@ export default function OverviewPage() {
             
             <GlassPanel hover className="p-4 flex flex-col justify-between">
               <div>
-                <h3 className="text-md font-medium mb-4">Machine Learning</h3>
+                <h3 className="text-md font-medium mb-4 flex items-center justify-between">
+                  <span>Machine Learning</span>
+                  <TraceabilityBadge metricId="var_ml" variant="short" />
+                </h3>
                 <div className="flex items-center justify-between">
                   <LEDStack zone={mlTraffic?.result?.zone || 'VERTE'} label="ML" size="sm" />
                   <StatusChip variant={mlTraffic?.result?.zone === 'JAUNE' ? 'warning' : mlTraffic?.result?.zone === 'ROUGE' ? 'danger' : 'success'} pulse={mlTraffic?.result?.zone === 'ROUGE'}>
@@ -223,8 +230,7 @@ export default function OverviewPage() {
               confidence_level: 1 - alpha,
               horizon_days: 1,
               n_simulations: 100000,
-              mu: 0.0,
-              sigma: 0.15
+              custom_params: false
             });
             console.log('Monte Carlo Execution Result:', result);
             setExecutionResult(result);

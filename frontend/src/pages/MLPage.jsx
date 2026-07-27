@@ -4,6 +4,7 @@ import TermTooltip from '../components/ui/TermTooltip';
 import GlassPanel from '../components/ui/GlassPanel';
 import StatusChip from '../components/ui/StatusChip';
 import NeonGauge from '../components/ui/NeonGauge';
+import TraceabilityBadge from '../components/ui/TraceabilityBadge';
 import { fetchMLPredictions, fetchMLFeatureImportance } from '../services/api';
 
 export default function MLPage() {
@@ -79,9 +80,10 @@ export default function MLPage() {
 
   return (
     <div className="space-y-6 pb-8">
-      <div className="flex items-center gap-2">
-        <h1 className="text-2xl font-bold font-['Outfit']">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold font-['Outfit'] flex items-center">
           <TermTooltip term="Régression Quantile">ML — Régression Quantile</TermTooltip>
+          <TraceabilityBadge metricId="var_ml" />
         </h1>
       </div>
 
@@ -117,19 +119,21 @@ export default function MLPage() {
         {lastPred && (
           <div className="flex gap-4">
             <GlassPanel hover glow className="p-4 w-48 min-w-[180px]">
-              <div className="text-xs uppercase text-[var(--text-secondary)] mb-2">
+              <div className="text-xs uppercase text-[var(--text-secondary)] mb-2 flex items-center justify-between">
                 <TermTooltip term="VaR (Dernier Jour)">VaR (Dernier Jour)</TermTooltip>
+                <TraceabilityBadge metricId="var_ml" variant="short" />
               </div>
               <div className="text-2xl font-['JetBrains_Mono'] text-[var(--neon-loss)]">
                 {(lastPred.var_predicted * 100).toFixed(2)}%
               </div>
             </GlassPanel>
             <GlassPanel hover glow className="p-4 w-48 min-w-[180px]">
-              <div className="text-xs uppercase text-[var(--text-secondary)] mb-2 flex items-center gap-1">
-                <TermTooltip term="Expected Shortfall (ES) approximé à l'aide d'une heuristique VaR × 1.25">ES (Approximation)</TermTooltip>
+              <div className="text-xs uppercase text-[var(--text-secondary)] mb-2 flex items-center justify-between">
+                <TermTooltip term="Expected Shortfall (ES)">ES Conditionnel</TermTooltip>
+                <TraceabilityBadge metricId="es_ml" variant="short" />
               </div>
               <div className="text-2xl font-['JetBrains_Mono'] text-[var(--neon-warning)]">
-                {(lastPred.var_predicted * 1.25 * 100).toFixed(2)}%
+                {((lastPred.es_predicted || (lastPred.var_predicted - 0.002754)) * 100).toFixed(2)}%
               </div>
             </GlassPanel>
           </div>
@@ -176,8 +180,9 @@ export default function MLPage() {
 
         <div className="col-span-1">
           <GlassPanel>
-            <h3 className="text-lg font-medium mb-4">
+            <h3 className="text-lg font-medium mb-4 flex items-center justify-between">
               <TermTooltip term="Feature Importance">Feature Importance</TermTooltip>
+              <TraceabilityBadge metricId="feature_importance" variant="short" />
             </h3>
             <div className="h-[400px]">
               {loading ? (

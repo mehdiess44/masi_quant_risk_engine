@@ -16,11 +16,31 @@ class MonteCarloEngine:
             config_path = os.path.join(os.getcwd(), 'app', 'models', 'moteur_mc_v3.json')
             
         if os.path.exists(config_path):
-            with open(config_path, 'r') as f:
-                config = json.load(f)
-                self.default_mu = config.get('mu', self.default_mu)
-                self.default_sigma = config.get('sigma', self.default_sigma)
-                self.default_s0 = config.get('S0', self.default_s0)
+            try:
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                    calib = config.get('calibration', {})
+                    sim_settings = config.get('simulation_settings', {})
+                    self.default_mu = float(calib.get('mu', config.get('mu', self.default_mu)))
+                    self.default_sigma = float(calib.get('sigma', config.get('sigma', self.default_sigma)))
+                    self.default_s0 = float(calib.get('S0', config.get('S0', self.default_s0)))
+                    self.default_n_simulations = int(sim_settings.get('n_simulations', 100000))
+                    self.default_horizon = int(sim_settings.get('horizon_days', 1))
+                    self.default_alpha = float(sim_settings.get('alpha_target', 0.05))
+            except Exception as e:
+                print(f"WARNING: Erreur de lecture de {config_path} ({e}). Fallback aux valeurs MASI calibrées.")
+                self._apply_fallback_defaults()
+        else:
+            print(f"WARNING: Fichier de calibration {config_path} introuvable. Fallback propre aux valeurs MASI calibrées.")
+            self._apply_fallback_defaults()
+
+    def _apply_fallback_defaults(self):
+        self.default_mu = 0.00032432418358120126
+        self.default_sigma = 0.007887243849819642
+        self.default_s0 = 12.38882
+        self.default_n_simulations = 100000
+        self.default_horizon = 1
+        self.default_alpha = 0.05
 
     def simulate(self, n_simulations: int, horizon_days: int, alpha: float, custom_params: dict = None):
         mu = self.default_mu
@@ -29,25 +49,11 @@ class MonteCarloEngine:
         
         if custom_params:
             if 'mu' in custom_params and custom_params['mu'] is not None:
-                mu = custom_params['mu']
+                mu = float(custom_params['mu'])
             if 'sigma' in custom_params and custom_params['sigma'] is not None:
-                sigma = custom_params['sigma']
+                sigma = float(custom_params['sigma'])
             if 'S0' in custom_params and custom_params['S0'] is not None:
-                s0 = custom_params['S0']
-        else:
-            try:
-                from app.data_pipeline import load_full_data
-                df = load_full_data()
-                if not df.empty:
-                    if 'log_return' not in df.columns:
-                        df['log_return'] = np.log(df['Close'] / df['Close'].shift(1))
-                    recent = df['log_return'].tail(252).dropna()
-                    if len(recent) > 0:
-                        mu = float(np.mean(recent))
-                        sigma = float(np.std(recent, ddof=1))
-                    s0 = float(df['Close'].iloc[-1])
-            except ImportError:
-                pass
+                s0 = float(custom_params['S0'])
                 
         if sigma <= 0:
             raise ValueError("La volatilité doit être strictement positive")

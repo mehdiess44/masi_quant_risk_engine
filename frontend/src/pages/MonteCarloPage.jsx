@@ -3,17 +3,44 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGri
 import TermTooltip from '../components/ui/TermTooltip';
 import GlassPanel from '../components/ui/GlassPanel';
 import GlowSlider from '../components/ui/GlowSlider';
-import { runMonteCarlo } from '../services/api';
+import TraceabilityBadge from '../components/ui/TraceabilityBadge';
+import { runMonteCarlo, fetchMonteCarloCalibration } from '../services/api';
 
 export default function MonteCarloPage() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [params, setParams] = useState({
     alpha: 0.05,
-    n_simulations: 10000,
+    n_simulations: 100000,
     horizon_days: 1,
-    portfolio_value: 1000000
+    portfolio_value: 12.38882,
+    mu: 0.00032432,
+    sigma: 0.00788724,
+    custom_params: false,
+    seed: 42
   });
+
+  useEffect(() => {
+    const initCalibration = async () => {
+      try {
+        const calib = await fetchMonteCarloCalibration();
+        setParams(prev => ({
+          ...prev,
+          alpha: calib.alpha,
+          n_simulations: calib.n_simulations,
+          horizon_days: calib.horizon_days,
+          portfolio_value: calib.S0,
+          mu: calib.mu,
+          sigma: calib.sigma,
+          custom_params: false,
+          seed: prev.seed !== undefined ? prev.seed : 42
+        }));
+      } catch (err) {
+        console.error("Erreur chargement calibration:", err);
+      }
+    };
+    initCalibration();
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -60,9 +87,10 @@ export default function MonteCarloPage() {
 
   return (
     <div className="space-y-6 pb-8">
-      <div className="flex items-center gap-2">
-        <h1 className="text-2xl font-bold font-['Outfit']">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold font-['Outfit'] flex items-center">
           <TermTooltip term="Monte Carlo">Simulation Monte Carlo</TermTooltip>
+          <TraceabilityBadge metricId="var_mc" />
         </h1>
       </div>
 
@@ -72,11 +100,13 @@ export default function MonteCarloPage() {
           const isPct = metric.includes('pct');
           const displayVal = isPct ? `${(val * 100).toFixed(2)}%` : val.toLocaleString(undefined, { maximumFractionDigits: 2 });
           const titleMap = { var: 'VaR MAD', es: 'ES MAD', var_pct: 'VaR %', es_pct: 'ES %' };
+          const badgeId = metric.includes('es') ? 'es_mc' : 'var_mc';
           
           return (
             <GlassPanel key={metric} hover glow>
-              <div className="text-xs uppercase text-[var(--text-secondary)] mb-2">
+              <div className="text-xs uppercase text-[var(--text-secondary)] mb-2 flex items-center justify-between">
                 <TermTooltip term={titleMap[metric]}>{titleMap[metric]}</TermTooltip>
+                <TraceabilityBadge metricId={badgeId} variant="short" />
               </div>
               <div className={`text-2xl font-['JetBrains_Mono'] ${loading ? 'animate-pulse opacity-50' : 'text-[var(--neon-loss)]'}`}>
                 {displayVal}
@@ -180,30 +210,49 @@ export default function MonteCarloPage() {
                 displayValue={params.horizon_days.toString()} 
               />
               <GlowSlider 
-                min={1000000} max={50000000} step={1000000} 
-                value={params.portfolio_value} 
-                onChange={(val) => setParams({...params, portfolio_value: val})} 
-                label="Valeur Portefeuille" 
-                displayValue={(params.portfolio_value / 1000000).toFixed(1) + 'M'} 
+                min={1} max={500} step={1} 
+                value={params.portfolio_value || 12.38882} 
+                onChange={(val) => setParams({...params, portfolio_value: val, custom_params: true})} 
+                label="Valeur Portefeuille (S₀ MAD)" 
+                displayValue={(params.portfolio_value || 12.38882).toFixed(2)} 
               />
+              <div className="pt-4 border-t border-[var(--border-subtle)] flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
+                    <span>Mode Audit (Reproductible)</span>
+                    <TraceabilityBadge metricId="seed_42" variant="short" />
+                  </div>
+                  <div className="text-xs text-[var(--text-secondary)]">Graine fixe (seed=42)</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setParams({...params, seed: params.seed === 42 ? null : 42})}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${params.seed === 42 ? 'bg-[var(--neon-cyan)]' : 'bg-[var(--surface-hover)] border border-[var(--border-subtle)]'}`}
+                >
+                  <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${params.seed === 42 ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+              </div>
             </div>
           </GlassPanel>
 
           {data && (
             <GlassPanel className="mt-6">
-              <h3 className="text-lg font-medium mb-4">Calibration Active</h3>
+              <h3 className="text-lg font-medium mb-4 flex items-center justify-between">
+                <span>Calibration Active</span>
+                <TraceabilityBadge metricId="mu_calibrated" variant="short" />
+              </h3>
               <div className="space-y-2 mb-6">
-                <div className="flex justify-between text-sm">
-                  <span className="text-[var(--text-secondary)]">S₀ (Initial)</span>
-                  <span className="font-mono-data text-[var(--text-primary)]">{data.S0?.toFixed(2)}</span>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-[var(--text-secondary)] flex items-center gap-1">S₀ (Initial) <TraceabilityBadge metricId="s0_calibrated" variant="short" /></span>
+                  <span className="font-mono-data text-[var(--text-primary)]">{data.S0?.toFixed(5)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[var(--text-secondary)]">µ (Rendement)</span>
-                  <span className="font-mono-data text-[var(--text-primary)]">{(data.mu * 100)?.toFixed(4)}%</span>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-[var(--text-secondary)]">µ (Rendement jour)</span>
+                  <span className="font-mono-data text-[var(--text-primary)]">{(data.mu * 100)?.toFixed(6)}%</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[var(--text-secondary)]">σ (Volatilité)</span>
-                  <span className="font-mono-data text-[var(--text-primary)]">{(data.sigma * 100)?.toFixed(4)}%</span>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-[var(--text-secondary)] flex items-center gap-1">σ (Volatilité jour) <TraceabilityBadge metricId="sigma_calibrated" variant="short" /></span>
+                  <span className="font-mono-data text-[var(--text-primary)]">{(data.sigma * 100)?.toFixed(6)}%</span>
                 </div>
               </div>
 

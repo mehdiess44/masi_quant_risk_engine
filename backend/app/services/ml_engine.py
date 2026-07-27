@@ -41,6 +41,10 @@ class MLEngine:
         dates = df_features['Date'].tolist()
         actual_returns = df_features['log_return'].tolist()
         
+        # Calcul de l'excédent de perte moyen dans la queue (tail excess) pour l'ES conditionnel
+        viols_excess = [float(actual_returns[i]) - float(var_predictions[i]) for i in range(len(dates)) if actual_returns[i] < var_predictions[i]]
+        delta_tail = float(np.mean(viols_excess)) if viols_excess else -0.002754
+        
         results = []
         for i in range(len(dates)):
             is_violation = bool(actual_returns[i] < var_predictions[i])
@@ -48,6 +52,7 @@ class MLEngine:
                 "date": dates[i],
                 "actual_return": float(actual_returns[i]),
                 "var_predicted": float(var_predictions[i]),
+                "es_predicted": float(var_predictions[i]) + delta_tail,
                 "is_violation": is_violation
             })
             

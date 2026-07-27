@@ -6,6 +6,7 @@ import NeonGauge from '../components/ui/NeonGauge';
 import LEDStack from '../components/ui/LEDStack';
 import Confetti from '../components/ui/Confetti';
 import GlowSlider from '../components/ui/GlowSlider';
+import TraceabilityBadge from '../components/ui/TraceabilityBadge';
 import { fetchBacktestingComparison, fetchTrafficLight, fetchKupiecTest } from '../services/api';
 
 export default function CompliancePage() {
@@ -90,7 +91,10 @@ export default function CompliancePage() {
     return (
       <GlassPanel hover glow>
         <div className="flex justify-between items-start mb-6">
-          <h3 className="text-xl font-medium">{modelName}</h3>
+          <h3 className="text-xl font-medium flex items-center gap-2">
+            <span>{modelName}</span>
+            <TraceabilityBadge metricId="kupiec_pof" variant="short" />
+          </h3>
           {comp?.best_model?.toLowerCase().includes(modelName.toLowerCase().split(' ')[0]) && (
             <StatusChip variant="info" pulse>★ Best Model</StatusChip>
           )}
@@ -165,8 +169,9 @@ export default function CompliancePage() {
       <Confetti trigger={bothPass} />
 
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold font-['Outfit']">
+        <h1 className="text-2xl font-bold font-['Outfit'] flex items-center">
           <TermTooltip term="Bâle III">Conformité Bâle III</TermTooltip>
+          <TraceabilityBadge metricId="traffic_light" />
         </h1>
       </div>
 
@@ -197,12 +202,15 @@ export default function CompliancePage() {
       <div className="grid grid-cols-2 gap-6">
         <GlassPanel hover>
           <div className="flex flex-col items-center justify-center py-6">
-            <h3 className="text-lg mb-6">Zone Bâle - MC</h3>
+            <h3 className="text-lg mb-6 flex items-center gap-2">
+              <span>Approche Feux Tricolores Bâle III (MC)</span>
+              <TraceabilityBadge metricId="traffic_light" variant="short" />
+            </h3>
             <LEDStack zone={mcTraf?.result?.zone} label="Monte Carlo" size="md" />
             <div className="text-xs text-[var(--text-secondary)] mt-4">(Sur fenêtre glissante : {windowSize} jours)</div>
             <div className="mt-6 flex flex-col items-center">
               <StatusChip variant={mcTraf?.result?.zone === 'VERTE' ? 'success' : mcTraf?.result?.zone === 'JAUNE' ? 'warning' : 'danger'}>
-                {mcTraf?.result?.zone || 'N/A'}
+                {mcTraf?.result?.zone === 'VERTE' ? 'Zone Verte (Conforme)' : mcTraf?.result?.zone === 'JAUNE' ? 'Zone Jaune (Surcharge)' : mcTraf?.result?.zone === 'ROUGE' ? 'Zone Rouge (Rejeté)' : (mcTraf?.result?.zone || 'N/A')}
               </StatusChip>
               {mcTraf?.result && (
                 <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-[var(--text-secondary)] font-mono-data border border-[var(--border-subtle)] p-3 rounded bg-[var(--surface-active)]">
@@ -212,7 +220,10 @@ export default function CompliancePage() {
                   <span className="text-[var(--neon-profit)]">{mcTraf.result.green_threshold}</span>
                   <span className="text-right">Seuil Jaune (&lt;) :</span>
                   <span className="text-[var(--neon-warning)]">{mcTraf.result.yellow_threshold}</span>
-                  <span className="text-right font-bold mt-1">Multiplicateur :</span>
+                  <span className="text-right font-bold mt-1 flex items-center justify-end gap-1">
+                    <span>Majoration (m_c) :</span>
+                    <TraceabilityBadge metricId="capital_penalty" variant="short" />
+                  </span>
                   <span className="text-[var(--text-primary)] font-bold mt-1">×{mcTraf.result.capital_multiplier?.toFixed(2)}</span>
                 </div>
               )}
@@ -222,12 +233,15 @@ export default function CompliancePage() {
 
         <GlassPanel hover>
           <div className="flex flex-col items-center justify-center py-6">
-            <h3 className="text-lg mb-6">Zone Bâle - ML</h3>
+            <h3 className="text-lg mb-6 flex items-center gap-2">
+              <span>Approche Feux Tricolores Bâle III (ML)</span>
+              <TraceabilityBadge metricId="traffic_light" variant="short" />
+            </h3>
             <LEDStack zone={mlTraf?.result?.zone} label="Machine Learning" size="md" />
             <div className="text-xs text-[var(--text-secondary)] mt-4">(Sur fenêtre glissante : {windowSize} jours)</div>
             <div className="mt-6 flex flex-col items-center">
               <StatusChip variant={mlTraf?.result?.zone === 'VERTE' ? 'success' : mlTraf?.result?.zone === 'JAUNE' ? 'warning' : 'danger'}>
-                {mlTraf?.result?.zone || 'N/A'}
+                {mlTraf?.result?.zone === 'VERTE' ? 'Zone Verte (Conforme)' : mlTraf?.result?.zone === 'JAUNE' ? 'Zone Jaune (Surcharge)' : mlTraf?.result?.zone === 'ROUGE' ? 'Zone Rouge (Rejeté)' : (mlTraf?.result?.zone || 'N/A')}
               </StatusChip>
               {mlTraf?.result && (
                 <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-[var(--text-secondary)] font-mono-data border border-[var(--border-subtle)] p-3 rounded bg-[var(--surface-active)]">
@@ -237,7 +251,10 @@ export default function CompliancePage() {
                   <span className="text-[var(--neon-profit)]">{mlTraf.result.green_threshold}</span>
                   <span className="text-right">Seuil Jaune (&lt;) :</span>
                   <span className="text-[var(--neon-warning)]">{mlTraf.result.yellow_threshold}</span>
-                  <span className="text-right font-bold mt-1">Multiplicateur :</span>
+                  <span className="text-right font-bold mt-1 flex items-center justify-end gap-1">
+                    <span>Majoration (m_c) :</span>
+                    <TraceabilityBadge metricId="capital_penalty" variant="short" />
+                  </span>
                   <span className="text-[var(--text-primary)] font-bold mt-1">×{mlTraf.result.capital_multiplier?.toFixed(2)}</span>
                 </div>
               )}

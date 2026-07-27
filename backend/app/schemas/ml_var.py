@@ -9,6 +9,7 @@ class MLVarPrediction(BaseModel):
     date: date
     actual_return: float
     var_predicted: float = Field(..., le=0, description="Predicted VaR is always non-positive")
+    es_predicted: float = Field(..., le=0, description="Predicted ES conditionnel is non-positive")
     is_violation: bool
 
 

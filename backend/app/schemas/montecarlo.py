@@ -13,6 +13,7 @@ class MonteCarloRequest(BaseModel):
     mu: Optional[float] = None
     sigma: Optional[float] = Field(None, gt=0)
     S0: Optional[float] = Field(None, gt=0)
+    seed: Optional[int] = Field(default=42, description="Seed de simulation. Mettre 42 pour le Mode Audit (reproductible), ou None pour une simulation libre.")
 
     @model_validator(mode='after')
     def check_custom_params(self) -> 'MonteCarloRequest':

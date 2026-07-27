@@ -7,8 +7,8 @@
         "S0": 12.38882
     },
     "simulation_settings": {
-        "horizon_days": 252,
-        "n_simulations": 10000,
+        "horizon_days": 1,
+        "n_simulations": 100000,
         "alpha_target": 0.05
     }
 }
