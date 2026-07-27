@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: quant_risk_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Montage en lecture seule pour rechargement à chaud des données R&D en dev/audit sans reconstruire l'image
+      - ./data:/data:ro
+      - ./data:/app/data:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - risk_network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: quant_risk_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - risk_network
+
+networks:
+  risk_network:
+    driver: bridge

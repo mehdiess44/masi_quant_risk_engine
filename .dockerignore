@@ -1,0 +1,16 @@
+node_modules/
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.git/
+.pytest_cache/
+cypress/
+build/
+.env
+*.log
+.gstack/
+.gemini/
+.context/
+notebooks/
+*.png
