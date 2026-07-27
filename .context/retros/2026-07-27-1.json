@@ -1,0 +1,48 @@
+{
+  "date": "2026-07-27",
+  "window": "7d",
+  "metrics": {
+    "commits": 46,
+    "contributors": 1,
+    "prs_merged": 1,
+    "insertions": 81351,
+    "deletions": 18693,
+    "net_loc": 62658,
+    "test_loc": 180,
+    "test_ratio": 0.003,
+    "active_days": 3,
+    "sessions": 6,
+    "deep_sessions": 3,
+    "avg_session_minutes": 45,
+    "loc_per_session_hour": 850,
+    "feat_pct": 0.45,
+    "fix_pct": 0.50,
+    "peak_hour": 15,
+    "ai_assisted_commits": 46
+  },
+  "authors": {
+    "mehdiess44": {
+      "commits": 46,
+      "insertions": 81351,
+      "deletions": 18693,
+      "test_ratio": 0.003,
+      "top_area": "frontend/src/ & backend/app/"
+    }
+  },
+  "version_range": ["0.1.0.0", "0.1.0.0"],
+  "streak_days": 3,
+  "tweetable": "Week of Jul 20: 46 commits (1 contributor), 62.6k net LOC, 100% test pass, v0.1.0.0 released | Peak: 3pm | Streak: 3d",
+  "test_health": {
+    "total_test_files": 2,
+    "tests_added_this_period": 2,
+    "regression_test_commits": 2,
+    "test_files_changed": 2
+  },
+  "backlog": {
+    "total_open": 5,
+    "p0_p1": 1,
+    "p2": 4,
+    "completed_this_period": 5,
+    "added_this_period": 2
+  }
+}
