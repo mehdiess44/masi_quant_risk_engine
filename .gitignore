@@ -58,6 +58,39 @@ Thumbs.db
 .idea/
 *.swp
 
-# Masquer la configuration gStack/Antigravity
-.antigravity
+# ==========================================
+# Dossiers de contexte IA et logs
+# ==========================================
+.antigravity/
 .gstack/
+.gemini/
+.context/
+skills/
+canary-reports/
+
+# ==========================================
+# Fichiers Markdown (sauf README.md)
+# ==========================================
+*.md
+!README.md
+!*/README.md
+!**/README.md
+
+# ==========================================
+# Fichiers Textes (sauf requirements.txt & moteur_var_v3.txt)
+# ==========================================
+*.txt
+!requirements.txt
+!*/requirements.txt
+!**/requirements.txt
+!app/models/moteur_var_v3.txt
+!*/app/models/moteur_var_v3.txt
+!**/app/models/moteur_var_v3.txt
+
+# ==========================================
+# Images et Captures d'écran
+# ==========================================
+*.png
+*.jpg
+*.jpeg
+*.gif
