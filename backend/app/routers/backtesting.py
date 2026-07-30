@@ -4,10 +4,12 @@ from app.schemas import BacktestingResponse, BacktestingComparisonResponse
 from app.services.backtesting_engine import BacktestingEngine
 from app.data_pipeline import load_test_data, load_eval_test_data, load_pure_test_data
 import numpy as np
+import functools
 
 router = APIRouter(prefix="/api/backtesting", tags=["Backtesting"])
 bt_engine = BacktestingEngine()
 
+@functools.lru_cache(maxsize=4)
 def get_mc_var_predictions(alpha: float):
     df_eval_test = load_eval_test_data()
     df_test = load_pure_test_data()
@@ -21,10 +23,11 @@ def get_mc_var_predictions(alpha: float):
     FENETRE_GLISSANTE = 252
     N_TRAJECTOIRES_BT = 10000
     
-    # Fixer la seed pour assurer la reproductibilité stricte du backtest par rapport au notebook
-    # Wait, the seed here makes the Monte Carlo backtest strictly deterministic.
-    # We will keep it here since it's for backtesting and reproducibility is good.
-    np.random.seed(42)
+    # Générateur aléatoire LOCAL thread-safe avec seed fixe pour reproductibilité.
+    # IMPORTANT: np.random.seed() est global et non thread-safe — les requêtes API
+    # concurrentes (Compliance + Overview en parallèle) corrompaient la séquence RNG,
+    # causant des statistiques Kupiec différentes entre les pages du dashboard.
+    rng = np.random.default_rng(42)
     
     for target_date in dates:
         # Fenêtre stricte du passé
@@ -40,7 +43,7 @@ def get_mc_var_predictions(alpha: float):
         sigma_dyn = np.std(rendements_fenetre, ddof=1)
         
         # Moteur Monte Carlo pour T=1
-        Z = np.random.standard_normal(N_TRAJECTOIRES_BT)
+        Z = rng.standard_normal(N_TRAJECTOIRES_BT)
         terme_drift = mu_dyn - (0.5 * sigma_dyn**2)
         rendements_simules_T1 = terme_drift + (sigma_dyn * Z)
         
@@ -52,7 +55,8 @@ def get_mc_var_predictions(alpha: float):
         es_pred = np.mean(rendements_simules_T1[rendements_simules_T1 <= var_pred])
         es_preds.append(float(es_pred))
         
-    return actual_returns, var_preds, es_preds, dates
+    # Tuples pour l'immutabilité du cache lru_cache
+    return tuple(actual_returns), tuple(var_preds), tuple(es_preds), tuple(dates)
 
 @router.get("/kupiec", response_model=BacktestingResponse)
 def get_kupiec_test(request: Request, model: str = Query("ml", pattern="^(mc|ml)$"), alpha: float = 0.05):

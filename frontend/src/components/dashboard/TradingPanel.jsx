@@ -4,7 +4,6 @@ import GlassPanel from '../ui/GlassPanel';
 import GlowSlider from '../ui/GlowSlider';
 import { Button } from '../ui/button';
 
-const PORTFOLIO_VALUE = 1000000;
 
 export default function TradingPanel({ onExecute, executionResult, isExecuting }) {
   const [riskLevel, setRiskLevel] = useState(50);
@@ -83,14 +82,30 @@ export default function TradingPanel({ onExecute, executionResult, isExecuting }
                   <div className="flex justify-between items-end">
                     <span className="text-sm text-[var(--text-secondary)]">VaR MAD</span>
                     <span className="font-mono-data text-xl text-[var(--neon-loss)] drop-shadow-[0_0_8px_rgba(255,50,50,0.5)]">
-                      {(executionResult.var_pct * PORTFOLIO_VALUE).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                      {executionResult.var?.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
                     </span>
                   </div>
                   <div className="flex justify-between items-end">
+                    <span className="text-sm text-[var(--text-secondary)]">VaR %</span>
+                    <span className="font-mono-data text-sm text-[var(--neon-loss)]">
+                      {executionResult.var_pct ? (executionResult.var_pct * 100).toFixed(4) + '%' : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-end mt-2">
                     <span className="text-sm text-[var(--text-secondary)]">ES MAD</span>
                     <span className="font-mono-data text-xl text-[var(--neon-warning)] drop-shadow-[0_0_8px_rgba(255,170,0,0.5)]">
-                      {(executionResult.es_pct * PORTFOLIO_VALUE).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                      {executionResult.es?.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
                     </span>
+                  </div>
+                  <div className="flex justify-between items-end">
+                    <span className="text-sm text-[var(--text-secondary)]">ES %</span>
+                    <span className="font-mono-data text-sm text-[var(--neon-warning)]">
+                      {executionResult.es_pct ? (executionResult.es_pct * 100).toFixed(4) + '%' : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-[var(--border-subtle)] flex justify-between items-center">
+                    <span className="text-xs text-[var(--text-tertiary)]">S₀ (réf.)</span>
+                    <span className="font-mono-data text-xs text-[var(--text-secondary)]">{executionResult.S0?.toFixed(5)} pts</span>
                   </div>
                 </div>
               </motion.div>

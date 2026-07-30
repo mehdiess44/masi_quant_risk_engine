@@ -19,10 +19,9 @@ def get_calibration():
 
 @router.post("/simulate", response_model=MonteCarloResponse)
 def simulate(request: MonteCarloRequest):
-    if request.seed is not None:
-        np.random.seed(request.seed)
-    else:
-        np.random.seed(None)
+    # Générateur aléatoire LOCAL thread-safe (au lieu de np.random.seed() global)
+    rng = np.random.default_rng(request.seed)
+    
     custom_params = None
     if request.custom_params and request.mu is not None and request.sigma is not None and request.S0 is not None:
         custom_params = {
@@ -35,7 +34,8 @@ def simulate(request: MonteCarloRequest):
         n_simulations=request.n_simulations or getattr(mc_engine, 'default_n_simulations', 100000),
         horizon_days=request.horizon_days or getattr(mc_engine, 'default_horizon', 1),
         alpha=request.alpha or getattr(mc_engine, 'default_alpha', 0.05),
-        custom_params=custom_params
+        custom_params=custom_params,
+        rng=rng
     )
     
     return MonteCarloResponse(**result)

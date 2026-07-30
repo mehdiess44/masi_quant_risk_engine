@@ -42,7 +42,7 @@ class MonteCarloEngine:
         self.default_horizon = 1
         self.default_alpha = 0.05
 
-    def simulate(self, n_simulations: int, horizon_days: int, alpha: float, custom_params: dict = None):
+    def simulate(self, n_simulations: int, horizon_days: int, alpha: float, custom_params: dict = None, rng=None):
         mu = self.default_mu
         sigma = self.default_sigma
         s0 = self.default_s0
@@ -58,15 +58,24 @@ class MonteCarloEngine:
         if sigma <= 0:
             raise ValueError("La volatilité doit être strictement positive")
             
-        # Les paramètres mu et sigma sont quotidiens, donc dt = 1 pas quotidien
+        # Générateur aléatoire local thread-safe (évite la corruption du RNG global
+        # entre requêtes API concurrentes)
+        if rng is None:
+            rng = np.random.default_rng()
+        
+        # Les paramètres mu et sigma sont QUOTIDIENS (calibrés par np.std sur rendements journaliers).
+        # dt = 1 jour → pas de conversion nécessaire.
+        # IMPORTANT: NE PAS diviser sigma par sqrt(252) — sigma est DÉJÀ daily.
+        # Diviser par sqrt(252) le réduirait de 16x et rendrait la VaR ~25x trop faible.
         dt = 1.0
         
         # Mouvement Brownien Géométrique vectorisé (multi-step)
         # Z de dimension (horizon_days, n_simulations)
-        Z = np.random.standard_normal((horizon_days, n_simulations))
-        sigma_daily = sigma / np.sqrt(252)
-        drift = (mu - 0.5 * sigma_daily**2) * dt
-        daily_log_returns = drift + sigma_daily * np.sqrt(dt) * Z
+        Z = rng.standard_normal((horizon_days, n_simulations))
+        # Formule conforme au notebook R&D :
+        # rendements_simules = (mu - 0.5*sigma²)*dt + sigma*sqrt(dt)*Z
+        drift = (mu - 0.5 * sigma**2) * dt
+        daily_log_returns = drift + sigma * np.sqrt(dt) * Z
         
         # Cumul des rendements sur l'horizon
         cumulative_log_returns = np.cumsum(daily_log_returns, axis=0)
